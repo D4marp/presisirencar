@@ -159,15 +159,39 @@ func TestWeakProductionConfigIsRejected(t *testing.T) {
 			t.Errorf("secret %q seharusnya ditolak", s)
 		}
 	}
-	if weakSecret("4257c5065d789511fc325d2735144400003c6c578f80d6d63b9571c17bc870a7") {
+	if weakSecret("d25aa6193076b751231240f99f18f72505266e9168500852a34af1cb615f6e03") {
 		t.Error("secret acak 64 hex harus diterima")
 	}
-	for _, p := range []string{"", "pendek", "presisirentcar", "Presisi#2026Aman", "GANTI_DENGAN_PASSWORD_KUAT", "passwordpassword1", "admin1234567890", "stev"} {
+	for _, p := range []string{"", "pendek", "presisisemarang1", "Presisi#2026Aman", "GANTI_DENGAN_PASSWORD_KUAT", "passwordpassword1", "admin1234567890", "stev"} {
 		if !weakPassword(p, "stev") {
 			t.Errorf("password %q seharusnya ditolak", p)
 		}
 	}
 	if weakPassword("k7Qm2Xv9LpR4tZ8w", "admin") {
 		t.Error("password acak yang kuat harus diterima")
+	}
+}
+
+// Data awal mobil harus lolos validasi yang sama dengan yang dipakai dashboard,
+// dengan ID dan slug unik, sehingga katalog pertama kali selalu valid.
+func TestSeedCarsAreValid(t *testing.T) {
+	seen := map[string]bool{}
+	ids := map[int]bool{}
+	for _, c := range seedCars() {
+		avail := c.Available
+		in := carInput{Slug: c.Slug, Name: c.Name, Category: c.Category, Price: c.Price, Seats: c.Seats, Transmission: c.Transmission, Fuel: c.Fuel, Image: c.Image, Available: &avail, RentalType: c.RentalType, Features: c.Features, Badge: c.Badge}
+		if err := validateCarInput(&in); err != nil {
+			t.Errorf("mobil seed %q tidak valid: %v", c.Slug, err)
+		}
+		if !slugPattern.MatchString(c.Slug) {
+			t.Errorf("slug seed %q tidak valid", c.Slug)
+		}
+		if seen[c.Slug] || ids[c.ID] {
+			t.Errorf("slug/ID ganda pada seed: %q / %d", c.Slug, c.ID)
+		}
+		seen[c.Slug], ids[c.ID] = true, true
+	}
+	if len(seen) == 0 {
+		t.Fatal("data awal kosong")
 	}
 }
