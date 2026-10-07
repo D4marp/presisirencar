@@ -2,7 +2,7 @@
 
 import { MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { rp, waLink } from "@/lib/booking";
+import { rp, waLink } from "@/lib/rental";
 import { useCars } from "@/lib/cars-api";
 
 // Mobile (< 768px): bar tetap di bawah dengan harga mulai-dari + tombol WhatsApp.

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { ArrowRight, CalendarDays, Car, Clock, Minus, Plus, ShieldCheck, MessageCircle } from "lucide-react";
 import { HERO_VIDEO } from "@/data/business";
-import { endDate, formatDate, localDate, typeGroups, waLink, type Mode } from "@/lib/booking";
+import { endDate, formatDate, localDate, typeGroups, waLink, type Mode } from "@/lib/rental";
 
 export type Search = { mode: Mode; type: string; date: string; days: number };
 

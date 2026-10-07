@@ -1,9 +1,9 @@
 import { ChevronDown, MessageCircle, Phone } from "lucide-react";
 import { PHONE_DISPLAY, PHONE_HREF } from "@/data/business";
-import { waLink } from "@/lib/booking";
+import { waLink } from "@/lib/rental";
 
 const steps = [
-  ["1", "Pilih mobil & tanggal", "Cek unit yang sesuai kebutuhan Anda, lalu chat CS atau isi formulir booking."],
+  ["1", "Pilih mobil & tanggal", "Cek unit yang sesuai kebutuhan Anda, lalu chat CS lewat WhatsApp."],
   ["2", "Konfirmasi & dokumen", "CS memastikan unit, total biaya, dan dokumen (KTP, SIM A untuk lepas kunci)."],
   ["3", "Serah terima", "Ambil di kantor, atau minta diantar ke bandara, stasiun, hotel, atau alamat Anda."],
 ];

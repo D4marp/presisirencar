@@ -4,7 +4,7 @@ import { MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { DRIVER_FEE_PER_DAY, deliveryOptions } from "@/data/business";
 import type { Car } from "@/data/cars";
-import { formatDate, rp, waLink, type Mode } from "@/lib/booking";
+import { formatDate, rp, waLink, type Mode } from "@/lib/rental";
 import type { Search } from "./hero";
 
 export function Estimator({ cars, search }: { cars: Car[]; search: Search }) {

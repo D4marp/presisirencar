@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Fuel, MessageCircle, Settings2, Users } from "lucide-react";
 import type { Car } from "@/data/cars";
 import { carImage } from "@/lib/images";
-import { dailyPrice, formatDate, rp, typeGroups, waLink, type Mode } from "@/lib/booking";
+import { dailyPrice, formatDate, rp, typeGroups, waLink, type Mode } from "@/lib/rental";
 import type { Search } from "./hero";
 
 export function Fleet({ cars, search, onChange }: { cars: Car[]; search: Search; onChange: (next: Search) => void }) {
@@ -73,7 +73,6 @@ export function Fleet({ cars, search, onChange }: { cars: Car[]; search: Search;
                   >
                     <MessageCircle className="size-5" aria-hidden /> {car.available ? "Pesan via WhatsApp" : "Tanya jadwal via WhatsApp"}
                   </a>
-                  <Link href={`/booking?car=${car.slug}`} className="mt-2 text-center text-sm font-semibold text-slate-600 hover:text-slate-900 hover:underline">Isi formulir booking</Link>
                 </div>
               </li>
             );

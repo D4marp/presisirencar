@@ -10,7 +10,7 @@ import { TrustBar } from "@/components/home/trust-bar";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { useCars } from "@/lib/cars-api";
-import { localDate } from "@/lib/booking";
+import { localDate } from "@/lib/rental";
 
 export default function Home() {
   const { cars } = useCars();

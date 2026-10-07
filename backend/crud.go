@@ -5,24 +5,10 @@ import (
 	"log/slog"
 	"net/http"
 	"regexp"
-	"sort"
 	"strings"
 	"unicode"
 	"unicode/utf8"
 )
-
-const driverFeePerDay = 250000
-
-var bookingStatuses = map[string]bool{"Menunggu": true, "Dikonfirmasi": true, "Berjalan": true, "Selesai": true, "Dibatalkan": true}
-
-// calcTotal menghitung total sewa: harga/hari x durasi, ditambah driver bila unit lepas kunci.
-func calcTotal(car Car, days int, withDriver bool) int {
-	total := car.Price * days
-	if withDriver && car.RentalType != "Dengan Sopir" {
-		total += driverFeePerDay * days
-	}
-	return total
-}
 
 // audit mencatat siapa mengubah apa (tanpa data pribadi pelanggan).
 func audit(r *http.Request, action, target string) {
@@ -228,12 +214,6 @@ func (a *API) deleteCar(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 	a.store.mu.Lock()
 	defer a.store.mu.Unlock()
-	for _, b := range a.store.bookings {
-		if b.CarSlug == slug {
-			writeError(w, 409, "mobil sudah punya riwayat booking dan tidak bisa dihapus; nonaktifkan saja (available=false)")
-			return
-		}
-	}
 	for i := range a.store.cars {
 		if a.store.cars[i].Slug != slug {
 			continue
@@ -252,178 +232,4 @@ func (a *API) deleteCar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeError(w, 404, "kendaraan tidak ditemukan")
-}
-
-// ---------- Booking ----------
-
-func (a *API) getBooking(w http.ResponseWriter, r *http.Request) {
-	a.store.mu.RLock()
-	defer a.store.mu.RUnlock()
-	for _, b := range a.store.bookings {
-		if b.ID == r.PathValue("id") {
-			writeJSON(w, 200, b)
-			return
-		}
-	}
-	writeError(w, 404, "pesanan tidak ditemukan")
-}
-
-func (a *API) updateBooking(w http.ResponseWriter, r *http.Request) {
-	var in struct {
-		CustomerName   string `json:"customer_name"`
-		Phone          string `json:"phone"`
-		Email          string `json:"email"`
-		CarSlug        string `json:"car_slug"`
-		PickupLocation string `json:"pickup_location"`
-		StartDate      string `json:"start_date"`
-		Duration       int    `json:"duration"`
-		WithDriver     bool   `json:"with_driver"`
-		Notes          string `json:"notes"`
-		Status         string `json:"status"`
-		Total          *int   `json:"total"`
-	}
-	if err := decodeJSON(r, &in); err != nil {
-		writeError(w, 400, "data booking tidak valid")
-		return
-	}
-	user := currentUser(r)
-	if in.Total != nil && user.Role != "admin" {
-		writeError(w, 403, "hanya admin yang boleh mengubah total secara manual")
-		return
-	}
-
-	edited := Booking{CustomerName: strings.TrimSpace(in.CustomerName), Phone: strings.TrimSpace(in.Phone), Email: strings.TrimSpace(in.Email), CarSlug: in.CarSlug, PickupLocation: strings.TrimSpace(in.PickupLocation), StartDate: in.StartDate, Duration: in.Duration, WithDriver: in.WithDriver, Notes: strings.TrimSpace(in.Notes)}
-	if err := validateBooking(edited, true); err != nil {
-		writeError(w, 422, err.Error())
-		return
-	}
-	if in.Status != "" && !bookingStatuses[in.Status] {
-		writeError(w, 422, "status tidak valid")
-		return
-	}
-	if in.Total != nil && (*in.Total < 0 || *in.Total > 1000000000) {
-		writeError(w, 422, "total tidak valid")
-		return
-	}
-	car, ok := a.store.carBySlug(edited.CarSlug)
-	if !ok {
-		writeError(w, 422, "kendaraan tidak ditemukan")
-		return
-	}
-
-	a.store.mu.Lock()
-	defer a.store.mu.Unlock()
-	for i := range a.store.bookings {
-		if a.store.bookings[i].ID != r.PathValue("id") {
-			continue
-		}
-		old := a.store.bookings[i]
-		next := old
-		next.CustomerName, next.Phone, next.Email = edited.CustomerName, edited.Phone, edited.Email
-		next.CarSlug, next.PickupLocation, next.StartDate = edited.CarSlug, edited.PickupLocation, edited.StartDate
-		next.Duration, next.WithDriver, next.Notes = edited.Duration, edited.WithDriver, edited.Notes
-		if in.Status != "" {
-			next.Status = in.Status
-		}
-		// Total dihitung ulang hanya bila mobil/durasi/driver berubah, supaya harga historis tetap.
-		if next.CarSlug != old.CarSlug || next.Duration != old.Duration || next.WithDriver != old.WithDriver {
-			next.Total = calcTotal(car, next.Duration, next.WithDriver)
-		}
-		if in.Total != nil {
-			next.Total = *in.Total
-		}
-		a.store.bookings[i] = next
-		if err := a.store.saveLocked(); err != nil {
-			a.store.bookings[i] = old
-			writeError(w, 500, "gagal menyimpan perubahan")
-			return
-		}
-		audit(r, "booking.update", next.ID)
-		writeJSON(w, 200, next)
-		return
-	}
-	writeError(w, 404, "pesanan tidak ditemukan")
-}
-
-func (a *API) deleteBooking(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	a.store.mu.Lock()
-	defer a.store.mu.Unlock()
-	for i := range a.store.bookings {
-		if a.store.bookings[i].ID != id {
-			continue
-		}
-		removed := a.store.bookings[i]
-		rest := append([]Booking{}, a.store.bookings[:i]...)
-		rest = append(rest, a.store.bookings[i+1:]...)
-		prev := a.store.bookings
-		a.store.bookings = rest
-		if err := a.store.saveLocked(); err != nil {
-			a.store.bookings = prev
-			writeError(w, 500, "gagal menghapus pesanan")
-			return
-		}
-		audit(r, "booking.delete", removed.ID)
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-	writeError(w, 404, "pesanan tidak ditemukan")
-}
-
-// ---------- Pelanggan (turunan dari booking, hanya baca) ----------
-
-type Customer struct {
-	Name        string `json:"name"`
-	Phone       string `json:"phone"`
-	Email       string `json:"email,omitempty"`
-	Bookings    int    `json:"bookings"`
-	TotalSpent  int    `json:"total_spent"`
-	LastBooking string `json:"last_booking"`
-}
-
-func digitsOnly(s string) string {
-	var b strings.Builder
-	for _, r := range s {
-		if r >= '0' && r <= '9' {
-			b.WriteRune(r)
-		}
-	}
-	return b.String()
-}
-
-func (a *API) listCustomers(w http.ResponseWriter, r *http.Request) {
-	query := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
-	a.store.mu.RLock()
-	defer a.store.mu.RUnlock()
-
-	byPhone := map[string]*Customer{}
-	var order []string
-	for _, b := range a.store.bookings { // bookings tersimpan terbaru dulu
-		key := digitsOnly(b.Phone)
-		c, ok := byPhone[key]
-		if !ok {
-			c = &Customer{Name: b.CustomerName, Phone: b.Phone, Email: b.Email}
-			byPhone[key] = c
-			order = append(order, key)
-		}
-		c.Bookings++
-		if b.Status != "Dibatalkan" {
-			c.TotalSpent += b.Total
-		}
-		if b.StartDate > c.LastBooking {
-			c.LastBooking = b.StartDate
-		}
-		if c.Email == "" {
-			c.Email = b.Email
-		}
-	}
-	result := make([]Customer, 0, len(order))
-	for _, key := range order {
-		c := *byPhone[key]
-		if query == "" || strings.Contains(strings.ToLower(c.Name), query) || strings.Contains(digitsOnly(c.Phone), digitsOnly(query)) && digitsOnly(query) != "" {
-			result = append(result, c)
-		}
-	}
-	sort.SliceStable(result, func(i, j int) bool { return result[i].LastBooking > result[j].LastBooking })
-	writeJSON(w, 200, map[string]any{"data": result, "total": len(result)})
 }

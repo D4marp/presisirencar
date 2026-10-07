@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Backup harian seluruh data (booking, mobil, penghitung nomor, foto unggahan).
+# Backup harian seluruh data (daftar mobil dan foto unggahan).
 # Pasang di cron root:
 #   15 2 * * * /opt/presisi/deploy/backup.sh
 # Salin juga ke luar VPS (rsync/rclone) agar aman bila server hilang.

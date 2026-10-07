@@ -5,117 +5,20 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 )
 
-func futureDate(days int) string { return time.Now().In(wib).AddDate(0, 0, days).Format("2006-01-02") }
-
-func testServer(t *testing.T, seed bool) (*httptest.Server, *Store) {
+func testServer(t *testing.T) (*httptest.Server, *Store) {
 	t.Helper()
-	if seed {
-		t.Setenv("SEED_DEMO", "1")
-	} else {
-		t.Setenv("SEED_DEMO", "0")
-	}
-	store, err := newStore(filepath.Join(t.TempDir(), "bookings.json"))
+	store, err := newStore(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
 	server := httptest.NewServer(newAPI(store, newAuth("test-secret", demoUsers())).routes())
 	t.Cleanup(server.Close)
 	return server, store
-}
-
-func postBooking(t *testing.T, url, body string) (int, map[string]any) {
-	t.Helper()
-	res, err := http.Post(url+"/api/bookings", "application/json", strings.NewReader(body))
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer res.Body.Close()
-	var out map[string]any
-	_ = json.NewDecoder(res.Body).Decode(&out)
-	return res.StatusCode, out
-}
-
-func bookingJSON(slug, phone, date string, days int) string {
-	return `{"customer_name":"Sinta","phone":"` + phone + `","car_slug":"` + slug + `","pickup_location":"Semarang","start_date":"` + date + `","duration":` + string(rune('0'+days)) + `,"with_driver":true}`
-}
-
-func TestCreateBooking(t *testing.T) {
-	server, store := testServer(t, false)
-	code, out := postBooking(t, server.URL, bookingJSON("innova-reborn", "08123456789", futureDate(3), 2))
-	if code != http.StatusCreated {
-		t.Fatalf("status = %d (%v)", code, out)
-	}
-	if len(store.bookings) != 1 || store.bookings[0].Total != 2000000 {
-		t.Fatalf("booking tersimpan salah: %+v", store.bookings)
-	}
-	if out["id"] != "PR-1001" {
-		t.Fatalf("id = %v", out["id"])
-	}
-}
-
-func TestBookingValidation(t *testing.T) {
-	server, _ := testServer(t, false)
-	cases := map[string]string{
-		"mobil tidak ada":      bookingJSON("tidak-ada", "08123456789", futureDate(2), 1),
-		"mobil tidak tersedia": bookingJSON("hiace-premio", "08123456789", futureDate(2), 1),
-		"telepon invalid":      bookingJSON("agya", "abc", futureDate(2), 1),
-		"tanggal lewat":        bookingJSON("agya", "08123456789", futureDate(-2), 1),
-		"format tanggal":       bookingJSON("agya", "08123456789", "10-10-2026", 1),
-		"durasi nol":           bookingJSON("agya", "08123456789", futureDate(2), 0),
-		"durasi 31 hari":       strings.Replace(bookingJSON("agya", "08123456789", futureDate(2), 1), `"duration":1`, `"duration":31`, 1),
-		"nama kosong":          strings.Replace(bookingJSON("agya", "08123456789", futureDate(2), 1), `"Sinta"`, `""`, 1),
-		"field asing":          strings.Replace(bookingJSON("agya", "08123456789", futureDate(2), 1), `"with_driver"`, `"total":1,"with_driver"`, 1),
-	}
-	for name, body := range cases {
-		code, _ := postBooking(t, server.URL, body)
-		if code < 400 || code >= 500 {
-			t.Errorf("%s: status = %d, harusnya 4xx", name, code)
-		}
-	}
-}
-
-func TestBookingTotalIgnoresClientInput(t *testing.T) {
-	server, store := testServer(t, false)
-	// klien mencoba mengirim status/total sendiri: ditolak (field tak dikenal)
-	body := `{"customer_name":"A","phone":"08123456789","car_slug":"agya","pickup_location":"x","start_date":"` + futureDate(2) + `","duration":1,"status":"Selesai","total":1}`
-	if code, _ := postBooking(t, server.URL, body); code != 400 {
-		t.Fatalf("status = %d", code)
-	}
-	if len(store.bookings) != 0 {
-		t.Fatal("booking tidak boleh tersimpan")
-	}
-}
-
-func TestBookingRateLimit(t *testing.T) {
-	server, _ := testServer(t, false)
-	var last int
-	for i := 0; i < 12; i++ {
-		last, _ = postBooking(t, server.URL, bookingJSON("agya", "08123456789", futureDate(2), 1))
-	}
-	if last != 429 {
-		t.Fatalf("permintaan ke-12 = %d, harusnya 429", last)
-	}
-}
-
-func TestBookingIDsStayUniqueAfterSeed(t *testing.T) {
-	server, store := testServer(t, true)
-	_, out := postBooking(t, server.URL, bookingJSON("agya", "08123456789", futureDate(2), 1))
-	seen := map[string]bool{}
-	for _, b := range store.bookings {
-		if seen[b.ID] {
-			t.Fatalf("ID ganda: %s", b.ID)
-		}
-		seen[b.ID] = true
-	}
-	if out["id"] != "PR-1013" {
-		t.Fatalf("id = %v", out["id"])
-	}
 }
 
 func login(t *testing.T, url, user, pass string) (int, string) {
@@ -145,42 +48,51 @@ func do(t *testing.T, method, url, token, body string) int {
 	return res.StatusCode
 }
 
-func TestAdminEndpointsRequireLogin(t *testing.T) {
-	server, _ := testServer(t, true)
-	for _, p := range []string{"/api/bookings", "/api/dashboard"} {
-		if code := do(t, "GET", server.URL+p, "", ""); code != 401 {
-			t.Fatalf("%s tanpa login = %d", p, code)
-		}
-		if code := do(t, "GET", server.URL+p, "palsu.token", ""); code != 401 {
-			t.Fatalf("%s token palsu = %d", p, code)
-		}
-	}
-	if code := do(t, "PATCH", server.URL+"/api/bookings/PR-1001/status", "", `{"status":"Selesai"}`); code != 401 {
-		t.Fatalf("patch tanpa login = %d", code)
-	}
+func TestPublicCarsAndNoBookingEndpoints(t *testing.T) {
+	server, _ := testServer(t)
 	if code := do(t, "GET", server.URL+"/api/cars", "", ""); code != 200 {
 		t.Fatalf("cars publik = %d", code)
+	}
+	if code := do(t, "GET", server.URL+"/api/cars/xpander", "", ""); code != 200 {
+		t.Fatalf("detail mobil = %d", code)
+	}
+	// Pemesanan lewat WhatsApp: server tidak menyimpan data pelanggan, jadi endpoint ini tidak ada.
+	for _, p := range []string{"/api/bookings", "/api/customers", "/api/dashboard"} {
+		for _, method := range []string{"GET", "POST"} {
+			if code := do(t, method, server.URL+p, "", "{}"); code != 404 && code != 405 {
+				t.Errorf("%s %s = %d, harusnya tidak ada", method, p, code)
+			}
+		}
+	}
+}
+
+func TestMutationsRequireLogin(t *testing.T) {
+	server, _ := testServer(t)
+	for method, path := range map[string]string{"POST": "/api/cars", "PUT": "/api/cars/agya", "DELETE": "/api/cars/agya", "PATCH": "/api/cars/agya/availability"} {
+		if code := do(t, method, server.URL+path, "", "{}"); code != 401 {
+			t.Errorf("%s %s tanpa login = %d", method, path, code)
+		}
+		if code := do(t, method, server.URL+path, "palsu.token", "{}"); code != 401 {
+			t.Errorf("%s %s token palsu = %d", method, path, code)
+		}
 	}
 }
 
 func TestExpiredAndTamperedTokens(t *testing.T) {
 	a := newAuth("secret-a", demoUsers())
-	expired := a.issue(a.users[0], -time.Minute)
-	if _, err := a.verify(expired); err == nil {
+	if _, err := a.verify(a.issue(a.users[0], -time.Minute)); err == nil {
 		t.Fatal("token kedaluwarsa harus ditolak")
 	}
-	other := newAuth("secret-b", demoUsers()).issue(a.users[0], time.Hour)
-	if _, err := a.verify(other); err == nil {
+	if _, err := a.verify(newAuth("secret-b", demoUsers()).issue(a.users[0], time.Hour)); err == nil {
 		t.Fatal("token dengan secret lain harus ditolak")
 	}
-	good := a.issue(a.users[0], time.Hour)
-	if _, err := a.verify(good); err != nil {
+	if _, err := a.verify(a.issue(a.users[0], time.Hour)); err != nil {
 		t.Fatalf("token valid ditolak: %v", err)
 	}
 }
 
-func TestLoginFlowAndStatusUpdate(t *testing.T) {
-	server, _ := testServer(t, true)
+func TestLoginFlow(t *testing.T) {
+	server, _ := testServer(t)
 	if code, _ := login(t, server.URL, "admin", "salah"); code != 401 {
 		t.Fatalf("password salah = %d", code)
 	}
@@ -188,22 +100,13 @@ func TestLoginFlowAndStatusUpdate(t *testing.T) {
 	if code != 200 || token == "" {
 		t.Fatalf("login = %d", code)
 	}
-	if got := do(t, "GET", server.URL+"/api/bookings", token, ""); got != 200 {
-		t.Fatalf("bookings = %d", got)
-	}
-	if got := do(t, "PATCH", server.URL+"/api/bookings/PR-1001/status", token, `{"status":"Selesai"}`); got != 200 {
-		t.Fatalf("patch = %d", got)
-	}
-	if got := do(t, "PATCH", server.URL+"/api/bookings/PR-1001/status", token, `{"status":"Hack"}`); got != 422 {
-		t.Fatalf("status invalid = %d", got)
-	}
-	if got := do(t, "PATCH", server.URL+"/api/bookings/PR-9999/status", token, `{"status":"Selesai"}`); got != 404 {
-		t.Fatalf("id tidak ada = %d", got)
+	if got := do(t, "GET", server.URL+"/api/auth/me", token, ""); got != 200 {
+		t.Fatalf("me = %d", got)
 	}
 }
 
 func TestLoginRateLimit(t *testing.T) {
-	server, _ := testServer(t, false)
+	server, _ := testServer(t)
 	var last int
 	for i := 0; i < 7; i++ {
 		last, _ = login(t, server.URL, "admin", "salah")
@@ -226,7 +129,7 @@ func TestProductionUsersHaveNoDemoAccounts(t *testing.T) {
 }
 
 func TestSecurityHeadersAndCORS(t *testing.T) {
-	server, _ := testServer(t, false)
+	server, _ := testServer(t)
 	req, _ := http.NewRequest("GET", server.URL+"/api/health", nil)
 	req.Header.Set("Origin", "http://evil.example")
 	res, err := http.DefaultClient.Do(req)
@@ -239,5 +142,13 @@ func TestSecurityHeadersAndCORS(t *testing.T) {
 	}
 	if res.Header.Get("X-Content-Type-Options") != "nosniff" {
 		t.Fatal("header keamanan hilang")
+	}
+}
+
+func TestLegacyDataFileEnv(t *testing.T) {
+	t.Setenv("DATA_DIR", "")
+	t.Setenv("DATA_FILE", "/var/lib/presisi/bookings.json")
+	if got := dataDir(); got != "/var/lib/presisi" {
+		t.Fatalf("dataDir = %q", got)
 	}
 }

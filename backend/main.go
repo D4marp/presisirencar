@@ -10,13 +10,11 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
-	"unicode/utf8"
 )
 
 type Car struct {
@@ -35,56 +33,19 @@ type Car struct {
 	Badge        string   `json:"badge,omitempty"`
 }
 
-type Booking struct {
-	ID             string    `json:"id"`
-	CustomerName   string    `json:"customer_name"`
-	Phone          string    `json:"phone"`
-	Email          string    `json:"email,omitempty"`
-	CarSlug        string    `json:"car_slug"`
-	PickupLocation string    `json:"pickup_location"`
-	StartDate      string    `json:"start_date"`
-	Duration       int       `json:"duration"`
-	WithDriver     bool      `json:"with_driver"`
-	Notes          string    `json:"notes,omitempty"`
-	Status         string    `json:"status"`
-	Total          int       `json:"total"`
-	CreatedAt      time.Time `json:"created_at"`
-}
-
+// Store menyimpan daftar mobil (file JSON) dan foto unggahan dalam satu folder data.
 type Store struct {
 	mu       sync.RWMutex
 	cars     []Car
-	bookings []Booking
-	path     string
+	dir      string
 	carsPath string
-	metaPath string
-	// lastNumber adalah nomor pesanan terakhir yang pernah dipakai; tidak pernah turun
-	// walau pesanan dihapus, supaya nomor tidak dipakai ulang.
-	lastNumber int
 }
 
-func newStore(path string) (*Store, error) {
-	s := &Store{path: path, carsPath: env("CARS_FILE", filepath.Join(filepath.Dir(path), "cars.json"))}
-	s.metaPath = env("META_FILE", filepath.Join(filepath.Dir(path), "meta.json"))
+func newStore(dir string) (*Store, error) {
+	s := &Store{dir: dir, carsPath: env("CARS_FILE", filepath.Join(dir, "cars.json"))}
 	if err := s.loadCars(); err != nil {
 		return nil, err
 	}
-	data, err := os.ReadFile(path)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return nil, err
-	}
-	if len(data) > 0 {
-		if err := json.Unmarshal(data, &s.bookings); err != nil {
-			return nil, fmt.Errorf("membaca data booking: %w", err)
-		}
-	}
-	if len(s.bookings) == 0 && env("SEED_DEMO", "1") == "1" {
-		s.bookings = seedBookings(s.cars)
-		if err := s.saveLocked(); err != nil {
-			return nil, err
-		}
-	}
-	s.loadMeta()
 	return s, nil
 }
 
@@ -122,7 +83,6 @@ func writeFileAtomic(path string, value any) error {
 	return os.Rename(tmp, path)
 }
 
-func (s *Store) saveLocked() error     { return writeFileAtomic(s.path, s.bookings) }
 func (s *Store) saveCarsLocked() error { return writeFileAtomic(s.carsPath, s.cars) }
 
 // loadCars membaca daftar mobil dari file; bila belum ada, diisi dari data awal (seed) lalu disimpan.
@@ -152,139 +112,32 @@ func (s *Store) carBySlug(slug string) (Car, bool) {
 	return Car{}, false
 }
 
-func (s *Store) createBooking(input Booking) (Booking, error) {
-	car, ok := s.carBySlug(input.CarSlug)
-	if !ok {
-		return Booking{}, errors.New("kendaraan tidak ditemukan")
-	}
-	if !car.Available {
-		return Booking{}, errors.New("kendaraan sedang tidak tersedia")
-	}
-	input.CustomerName = strings.TrimSpace(input.CustomerName)
-	input.Phone = strings.TrimSpace(input.Phone)
-	input.Email = strings.TrimSpace(input.Email)
-	input.PickupLocation = strings.TrimSpace(input.PickupLocation)
-	input.Notes = strings.TrimSpace(input.Notes)
-	if err := validateBooking(input, false); err != nil {
-		return Booking{}, err
-	}
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	number, err := s.nextNumberLocked()
-	if err != nil {
-		return Booking{}, err
-	}
-	input.ID = fmt.Sprintf("PR-%04d", number)
-	input.Status = "Menunggu"
-	input.Total = calcTotal(car, input.Duration, input.WithDriver)
-	input.CreatedAt = time.Now()
-	s.bookings = append([]Booking{input}, s.bookings...)
-	if err := s.saveLocked(); err != nil {
-		s.bookings = s.bookings[1:]
-		return Booking{}, err
-	}
-	return input, nil
-}
-
-var wib = func() *time.Location {
-	if loc, err := time.LoadLocation("Asia/Jakarta"); err == nil {
-		return loc
-	}
-	return time.FixedZone("WIB", 7*3600)
-}()
-
-var phonePattern = regexp.MustCompile(`^\+?[0-9][0-9 \-]{6,18}[0-9]$`)
-
-func validateBooking(b Booking, allowPast bool) error {
-	switch {
-	case b.CustomerName == "" || b.Phone == "" || b.StartDate == "" || b.PickupLocation == "":
-		return errors.New("nama, telepon, lokasi, tanggal, dan durasi wajib diisi")
-	case utf8.RuneCountInString(b.CustomerName) > 100 || utf8.RuneCountInString(b.PickupLocation) > 200 || utf8.RuneCountInString(b.Notes) > 500 || len(b.Email) > 120:
-		return errors.New("isian terlalu panjang")
-	case !phonePattern.MatchString(b.Phone):
-		return errors.New("nomor telepon tidak valid")
-	case b.Email != "" && !strings.Contains(b.Email, "@"):
-		return errors.New("email tidak valid")
-	case b.Duration < 1 || b.Duration > 30:
-		return errors.New("durasi sewa harus 1 sampai 30 hari")
-	}
-	start, err := time.ParseInLocation("2006-01-02", b.StartDate, wib)
-	if err != nil {
-		return errors.New("format tanggal harus YYYY-MM-DD")
-	}
-	today := time.Now().In(wib).Truncate(24 * time.Hour)
-	y, mo, d := time.Now().In(wib).Date()
-	today = time.Date(y, mo, d, 0, 0, 0, 0, wib)
-	if !allowPast && start.Before(today) {
-		return errors.New("tanggal mulai tidak boleh sudah lewat")
-	}
-	return nil
-}
-
-// loadMeta memulihkan penghitung nomor pesanan: yang terbesar antara file meta dan nomor yang ada.
-func (s *Store) loadMeta() {
-	s.lastNumber = 1000
-	var meta struct {
-		LastBookingNumber int `json:"last_booking_number"`
-	}
-	if data, err := os.ReadFile(s.metaPath); err == nil {
-		_ = json.Unmarshal(data, &meta)
-		if meta.LastBookingNumber > s.lastNumber {
-			s.lastNumber = meta.LastBookingNumber
-		}
-	}
-	for _, b := range s.bookings {
-		var n int
-		if _, err := fmt.Sscanf(b.ID, "PR-%d", &n); err == nil && n > s.lastNumber {
-			s.lastNumber = n
-		}
-	}
-}
-
-// nextNumberLocked mengambil nomor pesanan berikutnya dan menyimpannya permanen.
-func (s *Store) nextNumberLocked() (int, error) {
-	next := s.lastNumber + 1
-	if err := writeFileAtomic(s.metaPath, map[string]int{"last_booking_number": next}); err != nil {
-		return 0, err
-	}
-	s.lastNumber = next
-	return next, nil
-}
-
 type API struct {
-	store    *Store
-	auth     *Auth
-	bookings *limiter
+	store *Store
+	auth  *Auth
 }
 
-func newAPI(store *Store, auth *Auth) *API {
-	return &API{store: store, auth: auth, bookings: newLimiter(10, 10*time.Minute)}
-}
+func newAPI(store *Store, auth *Auth) *API { return &API{store: store, auth: auth} }
 
 func (a *API) routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, 200, map[string]string{"status": "ok", "service": "presisi-rencar-api"})
 	})
-	mux.HandleFunc("GET /api/cars", a.listCars)
-	mux.HandleFunc("GET /api/cars/{slug}", a.getCar)
 	mux.HandleFunc("POST /api/auth/login", a.auth.login)
 	mux.HandleFunc("GET /api/auth/me", a.auth.me)
-	mux.HandleFunc("POST /api/bookings", a.createBooking)
-	mux.HandleFunc("GET /api/bookings", a.auth.require(a.listBookings))
-	mux.HandleFunc("GET /api/bookings/{id}", a.auth.require(a.getBooking))
-	mux.HandleFunc("PUT /api/bookings/{id}", a.auth.require(a.updateBooking))
-	mux.HandleFunc("PATCH /api/bookings/{id}/status", a.auth.require(a.updateStatus))
-	mux.HandleFunc("DELETE /api/bookings/{id}", a.auth.requireRole("admin", a.deleteBooking))
+
+	// Publik
+	mux.HandleFunc("GET /api/cars", a.listCars)
+	mux.HandleFunc("GET /api/cars/{slug}", a.getCar)
+	mux.HandleFunc("GET /api/uploads/{name}", a.serveUpload)
+
+	// Dashboard
 	mux.HandleFunc("POST /api/cars", a.auth.requireRole("admin", a.createCar))
 	mux.HandleFunc("PUT /api/cars/{slug}", a.auth.requireRole("admin", a.updateCar))
 	mux.HandleFunc("PATCH /api/cars/{slug}/availability", a.auth.require(a.setAvailability))
 	mux.HandleFunc("DELETE /api/cars/{slug}", a.auth.requireRole("admin", a.deleteCar))
 	mux.HandleFunc("POST /api/uploads", a.auth.requireRole("admin", a.upload))
-	mux.HandleFunc("GET /api/uploads/{name}", a.serveUpload)
-	mux.HandleFunc("GET /api/customers", a.auth.require(a.listCustomers))
-	mux.HandleFunc("GET /api/dashboard", a.auth.require(a.dashboard))
 	return withMiddleware(mux)
 }
 
@@ -308,96 +161,6 @@ func (a *API) getCar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, car)
-}
-
-func (a *API) listBookings(w http.ResponseWriter, _ *http.Request) {
-	a.store.mu.RLock()
-	defer a.store.mu.RUnlock()
-	writeJSON(w, 200, map[string]any{"data": a.store.bookings, "total": len(a.store.bookings)})
-}
-
-func (a *API) createBooking(w http.ResponseWriter, r *http.Request) {
-	ip := clientIP(r)
-	if a.bookings.blocked(ip) {
-		writeError(w, 429, "terlalu banyak permintaan booking, coba lagi nanti atau hubungi kami via WhatsApp")
-		return
-	}
-	a.bookings.record(ip)
-	// Hanya field yang boleh diisi pelanggan; id, status, dan total dihitung server.
-	var in struct {
-		CustomerName   string `json:"customer_name"`
-		Phone          string `json:"phone"`
-		Email          string `json:"email"`
-		CarSlug        string `json:"car_slug"`
-		PickupLocation string `json:"pickup_location"`
-		StartDate      string `json:"start_date"`
-		Duration       int    `json:"duration"`
-		WithDriver     bool   `json:"with_driver"`
-		Notes          string `json:"notes"`
-	}
-	if err := decodeJSON(r, &in); err != nil {
-		writeError(w, 400, "data booking tidak valid")
-		return
-	}
-	booking, err := a.store.createBooking(Booking{CustomerName: in.CustomerName, Phone: in.Phone, Email: in.Email, CarSlug: in.CarSlug, PickupLocation: in.PickupLocation, StartDate: in.StartDate, Duration: in.Duration, WithDriver: in.WithDriver, Notes: in.Notes})
-	if err != nil {
-		writeError(w, 422, err.Error())
-		return
-	}
-	writeJSON(w, 201, booking)
-}
-
-func (a *API) updateStatus(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Status string `json:"status"`
-	}
-	if err := decodeJSON(r, &input); err != nil {
-		writeError(w, 400, err.Error())
-		return
-	}
-	if !bookingStatuses[input.Status] {
-		writeError(w, 422, "status tidak valid")
-		return
-	}
-	a.store.mu.Lock()
-	defer a.store.mu.Unlock()
-	for i := range a.store.bookings {
-		if a.store.bookings[i].ID == r.PathValue("id") {
-			a.store.bookings[i].Status = input.Status
-			if err := a.store.saveLocked(); err != nil {
-				writeError(w, 500, "gagal menyimpan perubahan")
-				return
-			}
-			writeJSON(w, 200, a.store.bookings[i])
-			return
-		}
-	}
-	writeError(w, 404, "pesanan tidak ditemukan")
-}
-
-func (a *API) dashboard(w http.ResponseWriter, _ *http.Request) {
-	a.store.mu.RLock()
-	defer a.store.mu.RUnlock()
-	revenue, active := 0, 0
-	byStatus := map[string]int{}
-	customers := map[string]bool{}
-	for _, booking := range a.store.bookings {
-		byStatus[booking.Status]++
-		customers[booking.Phone] = true
-		if booking.Status != "Dibatalkan" {
-			revenue += booking.Total
-		}
-		if booking.Status == "Dikonfirmasi" || booking.Status == "Berjalan" {
-			active++
-		}
-	}
-	available := 0
-	for _, car := range a.store.cars {
-		if car.Available {
-			available++
-		}
-	}
-	writeJSON(w, 200, map[string]any{"bookings": len(a.store.bookings), "revenue": revenue, "active_bookings": active, "fleet_total": len(a.store.cars), "fleet_available": available, "customers": len(customers), "by_status": byStatus})
 }
 
 func decodeJSON(r *http.Request, dst any) error {
@@ -459,6 +222,17 @@ func env(key, fallback string) string {
 	return fallback
 }
 
+// dataDir: DATA_DIR, atau (kompatibel dengan konfigurasi lama) folder dari DATA_FILE.
+func dataDir() string {
+	if dir := os.Getenv("DATA_DIR"); dir != "" {
+		return dir
+	}
+	if file := os.Getenv("DATA_FILE"); file != "" {
+		return filepath.Dir(file)
+	}
+	return "data"
+}
+
 func main() {
 	prod := env("APP_ENV", "development") == "production"
 	users := demoUsers()
@@ -469,11 +243,8 @@ func main() {
 			os.Exit(1)
 		}
 		users = adminUsers()
-		if os.Getenv("SEED_DEMO") == "" {
-			os.Setenv("SEED_DEMO", "0")
-		}
 	}
-	store, err := newStore(env("DATA_FILE", "data/bookings.json"))
+	store, err := newStore(dataDir())
 	if err != nil {
 		slog.Error("gagal memulai penyimpanan", "error", err)
 		os.Exit(1)
@@ -484,6 +255,7 @@ func main() {
 		os.Exit(1)
 	}
 	// LISTEN_ADDR=127.0.0.1:8080 di VPS agar API hanya bisa dicapai lewat reverse proxy.
+	// Batas waktu 30 detik cukup untuk unggah foto 4 MB di koneksi lambat.
 	server := &http.Server{Addr: env("LISTEN_ADDR", ":"+port), Handler: newAPI(store, newAuth(os.Getenv("AUTH_SECRET"), users)).routes(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second}
 
 	go func() {

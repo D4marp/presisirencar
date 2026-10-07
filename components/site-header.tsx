@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Phone, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { waLink } from "@/lib/rental";
 import { Logo } from "./logo";
 
 const links = [
@@ -40,14 +41,14 @@ export function SiteHeader(_props: { transparent?: boolean }) {
         </nav>
         <div className="site-header-actions">
           <a href="tel:+6281362218168" className="site-phone"><Phone size={15} /> 0813-6221-8168</a>
-          <Link className="btn btn-gold" href="/booking">Booking mobil</Link>
+          <a className="btn btn-gold" href={waLink("Halo PRESISI Rent Car, saya ingin sewa mobil.")} target="_blank" rel="noreferrer">Pesan via WhatsApp</a>
         </div>
         <button className="site-menu" onClick={() => setOpen(!open)} aria-label="Buka navigasi" aria-expanded={open}>{open ? <X /> : <Menu />}</button>
       </div>
       {open && (
         <nav className="site-mobile-nav">
           {links.map(([href, label]) => <Link href={href} onClick={() => setOpen(false)} key={href}>{label}</Link>)}
-          <Link className="btn btn-gold" href="/booking" onClick={() => setOpen(false)}>Booking mobil</Link>
+          <a className="btn btn-gold" href={waLink("Halo PRESISI Rent Car, saya ingin sewa mobil.")} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>Pesan via WhatsApp</a>
         </nav>
       )}
     </header>

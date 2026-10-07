@@ -18,7 +18,7 @@ var uploadName = regexp.MustCompile(`^[a-f0-9]{32}\.(jpg|png|webp)$`)
 var uploadTypes = map[string]string{"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
 
 func (s *Store) uploadDir() string {
-	return env("UPLOAD_DIR", filepath.Join(filepath.Dir(s.path), "uploads"))
+	return env("UPLOAD_DIR", filepath.Join(s.dir, "uploads"))
 }
 
 // upload menerima satu foto (multipart field "file") dan mengembalikan path publiknya.

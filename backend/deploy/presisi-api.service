@@ -37,7 +37,7 @@ SystemCallFilter=~@privileged @resources
 CapabilityBoundingSet=
 AmbientCapabilities=
 UMask=0077
-# Satu-satunya direktori yang boleh ditulis (data booking):
+# Satu-satunya direktori yang boleh ditulis (daftar mobil dan foto):
 ReadWritePaths=/var/lib/presisi
 LimitNOFILE=4096
 TasksMax=256

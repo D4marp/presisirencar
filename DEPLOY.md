@@ -8,13 +8,13 @@ Environment wajib (`APP_ENV=production`):
 
 | Variabel | Keterangan |
 | --- | --- |
-| `APP_ENV` | `production`. Menonaktifkan akun demo dan data contoh. |
+| `APP_ENV` | `production`. Menonaktifkan akun demo. |
 | `AUTH_SECRET` | Minimal 32 karakter acak. Buat: `openssl rand -hex 32` |
 | `ADMIN_PASSWORD` | Minimal 10 karakter. Password login admin. |
 | `ADMIN_USERNAME` | Opsional, default `admin`. |
 | `ADMIN_NAME` | Opsional, nama tampil di dashboard. |
 | `CORS_ORIGIN` | Domain frontend, mis. `https://presisirencar.com` (pisahkan koma bila lebih dari satu). |
-| `DATA_FILE` | Lokasi file data, mis. `/data/bookings.json`. **Harus di disk persisten (volume).** |
+| `DATA_DIR` | Folder data (daftar mobil + foto), mis. `/var/lib/presisi`. **Harus di disk persisten (volume).** |
 | `TRUST_PROXY` | `1` jika di belakang proxy/PaaS (Railway, Fly, Nginx) agar rate limit memakai IP asli. |
 | `PORT` | Default `8080`. |
 
@@ -47,14 +47,14 @@ Beranda sengaja **tidak** menampilkan klaim yang belum terbukti. Isi file ini de
 - [ ] `AUTH_SECRET` dan `ADMIN_PASSWORD` produksi sudah diatur (bukan nilai contoh).
 - [ ] Login dengan akun demo (`admin / Presisi#2026`) harus **gagal** di produksi.
 - [ ] `CORS_ORIGIN` = domain frontend persis (dengan `https://`).
-- [ ] Volume untuk `DATA_FILE` terpasang; lakukan backup berkala (data = file JSON).
+- [ ] Volume untuk `DATA_DIR` terpasang; lakukan backup berkala (data = file JSON).
 - [ ] HTTPS aktif di frontend dan API.
-- [ ] Coba satu booking dari website, lalu cek muncul di `/dashboard`.
+- [ ] Login ke `/dashboard`, tambah mobil uji dengan foto, cek tampil di website, lalu hapus.
 
 ## 4. Batasan yang diketahui (prototype → produksi)
 
-- Penyimpanan berupa **file JSON**, cocok untuk satu server dan volume kecil. Bila trafik atau jumlah staf bertambah, pindah ke PostgreSQL.
+- Penyimpanan berupa **file JSON dan folder foto**, cukup untuk katalog puluhan mobil di satu server.
 - Hanya ada satu akun admin dari environment. Belum ada manajemen pengguna.
 - Token login disimpan di `localStorage` (berlaku 12 jam). Untuk keamanan lebih tinggi gunakan cookie `HttpOnly`.
-- Status armada (tersedia/tidak) dan harga ada di kode (`backend/main.go` dan `data/cars.ts`), bukan di dashboard. Mengubahnya butuh edit kode dan deploy ulang. Keduanya harus diubah bersamaan.
-- Belum ada notifikasi otomatis (email/WhatsApp) saat booking masuk; staf mengecek dashboard.
+- Harga dan status mobil diubah lewat dashboard (tanpa deploy). `data/cars.ts` di frontend hanya data cadangan saat API tidak terjangkau.
+- Pemesanan lewat WhatsApp; website tidak menyimpan data pelanggan.

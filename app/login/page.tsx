@@ -47,8 +47,8 @@ export default function LoginPage() {
       <section className="login-side">
         <div className="login-side-inner">
           <div className="eyebrow light"><span /> Panel operasional</div>
-          <h1>Kelola armada dan pesanan dalam satu tempat.</h1>
-          <p>Pantau booking masuk, ubah status pesanan, dan lihat pendapatan secara langsung.</p>
+          <h1>Kelola armada mobil dalam satu tempat.</h1>
+          <p>Tambah mobil, ubah harga, unggah foto, dan atur ketersediaan unit. Perubahan langsung tampil di website.</p>
         </div>
       </section>
       <section className="login-form-wrap">

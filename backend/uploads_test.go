@@ -38,7 +38,7 @@ func upload(t *testing.T, url, token string, content []byte) (int, map[string]st
 
 func TestUploads(t *testing.T) {
 	t.Setenv("UPLOAD_DIR", t.TempDir())
-	server, _ := testServer(t, false)
+	server, _ := testServer(t)
 	admin, staff := tokens(t, server.URL)
 	png, _ := base64.StdEncoding.DecodeString("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")
 
