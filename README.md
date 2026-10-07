@@ -18,7 +18,9 @@ npm run dev
 
 Website tersedia di `http://localhost:3000`, dashboard di `/dashboard`, dan API di `http://localhost:8080/api`.
 
-## Akun demo (prototype)
+> Panduan produksi: lihat [DEPLOY.md](DEPLOY.md).
+
+## Akun demo (prototype, hanya mode development)
 
 | Peran | Username | Password |
 | --- | --- | --- |
