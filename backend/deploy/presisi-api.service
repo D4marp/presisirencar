@@ -1,0 +1,47 @@
+[Unit]
+Description=PRESISI Rent Car API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=presisi
+Group=presisi
+WorkingDirectory=/opt/presisi
+ExecStart=/opt/presisi/api
+EnvironmentFile=/etc/presisi/api.env
+Restart=always
+RestartSec=3
+
+# --- Hardening ---
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+RestrictAddrFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+CapabilityBoundingSet=
+AmbientCapabilities=
+UMask=0077
+# Satu-satunya direktori yang boleh ditulis (data booking):
+ReadWritePaths=/var/lib/presisi
+LimitNOFILE=4096
+TasksMax=256
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

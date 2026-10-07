@@ -1,0 +1,33 @@
+# Ganti api.contoh.com dengan domain API Anda (A record harus mengarah ke IP VPS).
+# Caddy mengurus sertifikat HTTPS (Let's Encrypt) dan perpanjangannya otomatis.
+api.contoh.com {
+	encode zstd gzip
+
+	# Batasi ukuran body (API hanya menerima JSON kecil)
+	request_body {
+		max_size 64KB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# Hanya path API yang diteruskan
+	@api path /api/*
+	handle @api {
+		reverse_proxy 127.0.0.1:8080 {
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+	handle {
+		respond "Not found" 404
+	}
+
+	log {
+		output file /var/log/caddy/presisi-api.log
+	}
+}
