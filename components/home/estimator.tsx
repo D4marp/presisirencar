@@ -3,11 +3,11 @@
 import { MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { DRIVER_FEE_PER_DAY, deliveryOptions } from "@/data/business";
-import { cars } from "@/data/cars";
+import type { Car } from "@/data/cars";
 import { formatDate, rp, waLink, type Mode } from "@/lib/booking";
 import type { Search } from "./hero";
 
-export function Estimator({ search }: { search: Search }) {
+export function Estimator({ cars, search }: { cars: Car[]; search: Search }) {
   const available = cars.filter((c) => c.available);
   const [slug, setSlug] = useState("avanza-xenia");
   const [days, setDays] = useState(3);
@@ -15,6 +15,7 @@ export function Estimator({ search }: { search: Search }) {
   const [delivery, setDelivery] = useState("kantor");
 
   const car = available.find((c) => c.slug === slug) ?? available[0];
+  if (!car) return null;
   const place = deliveryOptions.find((d) => d.id === delivery) ?? deliveryOptions[0];
   const driverIncluded = car.rentalType === "Dengan Sopir";
   const base = car.price * days;

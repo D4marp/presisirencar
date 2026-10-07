@@ -1,11 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Fuel, MessageCircle, Settings2, Users } from "lucide-react";
-import { cars } from "@/data/cars";
+import type { Car } from "@/data/cars";
+import { carImage } from "@/lib/images";
 import { dailyPrice, formatDate, rp, typeGroups, waLink, type Mode } from "@/lib/booking";
 import type { Search } from "./hero";
 
-export function Fleet({ search, onChange }: { search: Search; onChange: (next: Search) => void }) {
+export function Fleet({ cars, search, onChange }: { cars: Car[]; search: Search; onChange: (next: Search) => void }) {
   const group = typeGroups.find((g) => g.label === search.type) ?? typeGroups[0];
   const list = cars.filter((c) => group.match(c.category));
 
@@ -41,7 +42,7 @@ export function Fleet({ search, onChange }: { search: Search; onChange: (next: S
             return (
               <li key={car.slug} className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
                 <Link href={`/armada/${car.slug}`} className="relative block aspect-[4/3] bg-slate-100">
-                  <Image src={car.image} alt={car.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" />
+                  <Image {...carImage(car.image)} alt={car.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" />
                   <span className={`absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${car.available ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200" : "bg-slate-100 text-slate-700 ring-1 ring-slate-300"}`}>
                     <span className={`size-1.5 rounded-full ${car.available ? "bg-emerald-600" : "bg-slate-500"}`} aria-hidden />
                     {car.available ? "Tersedia" : "Sedang terjadwal"}

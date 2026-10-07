@@ -41,7 +41,8 @@ export async function authedFetch<T>(path: string, init: RequestInit = {}): Prom
     headers: { "Content-Type": "application/json", ...(session ? { Authorization: `Bearer ${session.token}` } : {}), ...init.headers },
   });
   if (res.status === 401) throw new UnauthorizedError("Sesi berakhir, silakan login kembali");
-  const data = await res.json();
+  if (res.status === 204) return undefined as T;
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Permintaan gagal");
   return data as T;
 }

@@ -3,11 +3,6 @@
 api.contoh.com {
 	encode zstd gzip
 
-	# Batasi ukuran body (API hanya menerima JSON kecil)
-	request_body {
-		max_size 64KB
-	}
-
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
@@ -16,9 +11,23 @@ api.contoh.com {
 		-Server
 	}
 
-	# Hanya path API yang diteruskan
+	# Unggah foto mobil: batas 5 MB (hanya admin yang lolos di sisi API)
+	@upload path /api/uploads
+	handle @upload {
+		request_body {
+			max_size 5MB
+		}
+		reverse_proxy 127.0.0.1:8080 {
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	# API lain hanya menerima JSON kecil
 	@api path /api/*
 	handle @api {
+		request_body {
+			max_size 64KB
+		}
 		reverse_proxy 127.0.0.1:8080 {
 			header_up X-Forwarded-For {remote_host}
 		}

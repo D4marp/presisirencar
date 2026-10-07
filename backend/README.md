@@ -2,11 +2,33 @@
 
 API ringan tanpa framework dan tanpa dependensi eksternal (hanya library standar Go).
 
-- Booking publik: `POST /api/bookings`
-- Daftar mobil publik: `GET /api/cars`, `GET /api/cars/{slug}`
-- Admin (wajib login): `GET /api/bookings`, `PATCH /api/bookings/{id}/status`, `GET /api/dashboard`
-- Auth: `POST /api/auth/login`, `GET /api/auth/me`
-- Health: `GET /api/health`
+## Endpoint
+
+| Endpoint | Akses | Fungsi |
+| --- | --- | --- |
+| `GET /api/health` | publik | status server |
+| `POST /api/auth/login`, `GET /api/auth/me` | publik / login | masuk, cek sesi |
+| `GET /api/cars`, `GET /api/cars/{slug}` | publik | daftar & detail mobil |
+| `POST /api/bookings` | publik (dibatasi 10/10 menit per IP) | pelanggan membuat booking |
+| `GET /api/uploads/{file}` | publik | menyajikan foto mobil yang diunggah |
+| `POST /api/cars` | admin | tambah mobil |
+| `PUT /api/cars/{slug}` | admin | ubah mobil (slug tidak bisa diubah) |
+| `PATCH /api/cars/{slug}/availability` | staf & admin | aktif/nonaktifkan unit |
+| `DELETE /api/cars/{slug}` | admin | hapus mobil (ditolak bila punya riwayat booking, nonaktifkan saja) |
+| `POST /api/uploads` | admin | unggah foto (multipart `file`; JPG/PNG/WebP, maks 4 MB) |
+| `GET /api/bookings`, `GET /api/bookings/{id}` | staf & admin | daftar / detail booking |
+| `PUT /api/bookings/{id}` | staf & admin | ubah booking (total dihitung ulang bila mobil/durasi/driver berubah; override `total` hanya admin) |
+| `PATCH /api/bookings/{id}/status` | staf & admin | ubah status |
+| `DELETE /api/bookings/{id}` | admin | hapus booking (nomor tidak dipakai ulang) |
+| `GET /api/customers?q=` | staf & admin | daftar pelanggan (turunan dari booking, baca saja) |
+| `GET /api/dashboard` | staf & admin | ringkasan angka |
+
+Semua perubahan data dicatat di log sebagai `audit` (pengguna, aksi, target; tanpa data pribadi).
+
+## Penyimpanan
+
+Semua file berada di folder yang sama dengan `DATA_FILE`:
+`bookings.json`, `cars.json` (dibuat dari data awal saat start pertama), `meta.json` (penghitung nomor pesanan), dan `uploads/` (foto). Bisa dipindah dengan `CARS_FILE`, `META_FILE`, `UPLOAD_DIR`.
 
 ## Menjalankan lokal
 
@@ -83,7 +105,7 @@ curl -s https://api.contoh.com/api/health
 (crontab -l 2>/dev/null; echo "15 2 * * * /opt/presisi/deploy/backup.sh") | crontab -
 ```
 
-Salin `/var/backups/presisi` ke luar VPS secara berkala (rsync/rclone).
+Backup berupa arsip `.tar.gz` seluruh `/var/lib/presisi` (booking, mobil, foto). Salin `/var/backups/presisi` ke luar VPS secara berkala (rsync/rclone).
 
 ### 7. Update versi baru
 
@@ -107,4 +129,4 @@ Di frontend set saat build: `NEXT_PUBLIC_API_URL=https://api.contoh.com/api`. `C
 
 ## Batasan
 
-Penyimpanan berupa satu file JSON (cocok satu server dan volume kecil; migrasi ke PostgreSQL bila tumbuh). Satu akun admin dari environment. Token login berlaku 12 jam dan disimpan di `localStorage` frontend.
+Penyimpanan berupa file JSON dan folder foto (cocok satu server dan volume kecil; migrasi ke PostgreSQL bila tumbuh). Satu akun admin dari environment. Token login berlaku 12 jam dan disimpan di `localStorage` frontend.

@@ -32,6 +32,7 @@ type Car struct {
 	Available    bool     `json:"available"`
 	RentalType   string   `json:"rental_type"`
 	Features     []string `json:"features"`
+	Badge        string   `json:"badge,omitempty"`
 }
 
 type Booking struct {
@@ -55,10 +56,19 @@ type Store struct {
 	cars     []Car
 	bookings []Booking
 	path     string
+	carsPath string
+	metaPath string
+	// lastNumber adalah nomor pesanan terakhir yang pernah dipakai; tidak pernah turun
+	// walau pesanan dihapus, supaya nomor tidak dipakai ulang.
+	lastNumber int
 }
 
 func newStore(path string) (*Store, error) {
-	s := &Store{path: path, cars: seedCars()}
+	s := &Store{path: path, carsPath: env("CARS_FILE", filepath.Join(filepath.Dir(path), "cars.json"))}
+	s.metaPath = env("META_FILE", filepath.Join(filepath.Dir(path), "meta.json"))
+	if err := s.loadCars(); err != nil {
+		return nil, err
+	}
 	data, err := os.ReadFile(path)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, err
@@ -74,40 +84,61 @@ func newStore(path string) (*Store, error) {
 			return nil, err
 		}
 	}
+	s.loadMeta()
 	return s, nil
 }
 
 func seedCars() []Car {
 	return []Car{
-		{1, "agya", "Toyota Agya", "City Car", 350000, 5, "MT / AT", "Bensin", "/fleet-suv.jpg", true, "Lepas Kunci", []string{"Irit BBM", "Audio Bluetooth", "Compact", "USB charger"}},
-		{2, "brio-satya", "Honda Brio", "City Car", 400000, 5, "Automatic", "Bensin", "/fleet-suv.jpg", true, "Lepas Kunci", []string{"Irit BBM", "Audio Bluetooth", "Kamera parkir", "Compact"}},
-		{3, "avanza-xenia", "Avanza / Xenia", "Family MPV", 450000, 7, "Automatic", "Bensin", "/fleet-mpv.jpg", true, "Lepas Kunci", []string{"AC dingin", "Audio Bluetooth", "Bagasi luas", "USB charger"}},
-		{4, "mobilio", "Honda Mobilio", "Family MPV", 450000, 7, "Automatic", "Bensin", "/fleet-mpv.jpg", true, "Lepas Kunci", []string{"AC double blower", "Kabin lega", "Audio Bluetooth", "Bagasi fleksibel"}},
-		{5, "xpander", "Mitsubishi Xpander", "Family MPV", 550000, 7, "Automatic", "Bensin", "/fleet-mpv.jpg", true, "Lepas Kunci", []string{"AC double blower", "Kabin lega", "Kamera parkir", "USB charger"}},
-		{6, "innova-reborn", "Innova Reborn", "Business MPV", 750000, 7, "Automatic", "Diesel", "/hero-presisi.jpg", true, "Lepas Kunci", []string{"Captain seat", "AC double blower", "Audio Bluetooth", "Kabin premium"}},
-		{7, "innova-zenix", "Innova Zenix", "Business MPV", 950000, 7, "Automatic", "Hybrid", "/hero-presisi.jpg", true, "Lepas Kunci", []string{"Hybrid", "Captain seat", "Toyota Safety Sense", "Kabin premium"}},
-		{8, "fortuner-pajero", "Fortuner / Pajero", "Premium SUV", 1250000, 7, "Automatic", "Diesel", "/fleet-suv.jpg", true, "Lepas Kunci", []string{"Leather seat", "Cruise control", "Kamera parkir", "Kabin premium"}},
-		{9, "air-ev", "Wuling Air EV", "Mobil Listrik", 500000, 4, "Automatic", "Listrik", "/fleet-suv.jpg", true, "Lepas Kunci", []string{"Kendaraan listrik", "Voice command", "Compact", "Biaya energi hemat"}},
-		{10, "ioniq-5", "Hyundai Ioniq 5", "Mobil Listrik", 1400000, 5, "Automatic", "Listrik", "/fleet-suv.jpg", true, "Lepas Kunci", []string{"Full electric", "Fast charging", "ADAS", "Kabin futuristik"}},
-		{11, "hiace-commuter", "Hiace Commuter", "Minibus", 1250000, 16, "Manual", "Diesel", "/hero-presisi.jpg", true, "Dengan Sopir", []string{"16 kursi", "AC setiap baris", "Bagasi luas", "Termasuk driver"}},
-		{12, "hiace-premio", "Hiace Premio", "Minibus", 1450000, 14, "Manual", "Diesel", "/hero-presisi.jpg", false, "Dengan Sopir", []string{"14 kursi", "AC setiap baris", "Bagasi luas", "Termasuk driver"}},
-		{13, "alphard", "Toyota Alphard", "Executive", 2800000, 6, "Automatic", "Bensin", "/hero-presisi.jpg", true, "Dengan Sopir", []string{"Captain seat", "Power door", "Entertainment", "Kabin VIP"}},
+		{1, "agya", "Toyota Agya", "City Car", 350000, 5, "MT / AT", "Bensin", "/fleet-suv.jpg", true, "Lepas Kunci", []string{"Irit BBM", "Audio Bluetooth", "Compact", "USB charger"}, "Hemat"},
+		{2, "brio-satya", "Honda Brio", "City Car", 400000, 5, "Automatic", "Bensin", "/fleet-suv.jpg", true, "Lepas Kunci", []string{"Irit BBM", "Audio Bluetooth", "Kamera parkir", "Compact"}, "Paling diminati"},
+		{3, "avanza-xenia", "Avanza / Xenia", "Family MPV", 450000, 7, "Automatic", "Bensin", "/fleet-mpv.jpg", true, "Lepas Kunci", []string{"AC dingin", "Audio Bluetooth", "Bagasi luas", "USB charger"}, "Paling diminati"},
+		{4, "mobilio", "Honda Mobilio", "Family MPV", 450000, 7, "Automatic", "Bensin", "/fleet-mpv.jpg", true, "Lepas Kunci", []string{"AC double blower", "Kabin lega", "Audio Bluetooth", "Bagasi fleksibel"}, ""},
+		{5, "xpander", "Mitsubishi Xpander", "Family MPV", 550000, 7, "Automatic", "Bensin", "/fleet-mpv.jpg", true, "Lepas Kunci", []string{"AC double blower", "Kabin lega", "Kamera parkir", "USB charger"}, "Favorit keluarga"},
+		{6, "innova-reborn", "Innova Reborn", "Business MPV", 750000, 7, "Automatic", "Diesel", "/hero-presisi.jpg", true, "Lepas Kunci", []string{"Captain seat", "AC double blower", "Audio Bluetooth", "Kabin premium"}, "Best value"},
+		{7, "innova-zenix", "Innova Zenix", "Business MPV", 950000, 7, "Automatic", "Hybrid", "/hero-presisi.jpg", true, "Lepas Kunci", []string{"Hybrid", "Captain seat", "Toyota Safety Sense", "Kabin premium"}, "Hybrid"},
+		{8, "fortuner-pajero", "Fortuner / Pajero", "Premium SUV", 1250000, 7, "Automatic", "Diesel", "/fleet-suv.jpg", true, "Lepas Kunci", []string{"Leather seat", "Cruise control", "Kamera parkir", "Kabin premium"}, "Premium"},
+		{9, "air-ev", "Wuling Air EV", "Mobil Listrik", 500000, 4, "Automatic", "Listrik", "/fleet-suv.jpg", true, "Lepas Kunci", []string{"Kendaraan listrik", "Voice command", "Compact", "Biaya energi hemat"}, "Electric"},
+		{10, "ioniq-5", "Hyundai Ioniq 5", "Mobil Listrik", 1400000, 5, "Automatic", "Listrik", "/fleet-suv.jpg", true, "Lepas Kunci", []string{"Full electric", "Fast charging", "ADAS", "Kabin futuristik"}, ""},
+		{11, "hiace-commuter", "Hiace Commuter", "Minibus", 1250000, 16, "Manual", "Diesel", "/hero-presisi.jpg", true, "Dengan Sopir", []string{"16 kursi", "AC setiap baris", "Bagasi luas", "Termasuk driver"}, "Rombongan"},
+		{12, "hiace-premio", "Hiace Premio", "Minibus", 1450000, 14, "Manual", "Diesel", "/hero-presisi.jpg", false, "Dengan Sopir", []string{"14 kursi", "AC setiap baris", "Bagasi luas", "Termasuk driver"}, ""},
+		{13, "alphard", "Toyota Alphard", "Executive", 2800000, 6, "Automatic", "Bensin", "/hero-presisi.jpg", true, "Dengan Sopir", []string{"Captain seat", "Power door", "Entertainment", "Kabin VIP"}, "Executive"},
 	}
 }
 
-func (s *Store) saveLocked() error {
-	if err := os.MkdirAll(filepath.Dir(s.path), 0700); err != nil {
+// writeFileAtomic menulis JSON ke file sementara lalu me-rename, agar tidak pernah setengah tertulis.
+func writeFileAtomic(path string, value any) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		return err
 	}
-	data, err := json.MarshalIndent(s.bookings, "", "  ")
+	data, err := json.MarshalIndent(value, "", "  ")
 	if err != nil {
 		return err
 	}
-	tmp := s.path + ".tmp"
+	tmp := path + ".tmp"
 	if err := os.WriteFile(tmp, data, 0600); err != nil {
 		return err
 	}
-	return os.Rename(tmp, s.path)
+	return os.Rename(tmp, path)
+}
+
+func (s *Store) saveLocked() error     { return writeFileAtomic(s.path, s.bookings) }
+func (s *Store) saveCarsLocked() error { return writeFileAtomic(s.carsPath, s.cars) }
+
+// loadCars membaca daftar mobil dari file; bila belum ada, diisi dari data awal (seed) lalu disimpan.
+func (s *Store) loadCars() error {
+	data, err := os.ReadFile(s.carsPath)
+	switch {
+	case err == nil && len(data) > 0:
+		if err := json.Unmarshal(data, &s.cars); err != nil {
+			return fmt.Errorf("membaca data mobil: %w", err)
+		}
+		return nil
+	case err != nil && !errors.Is(err, os.ErrNotExist):
+		return err
+	}
+	s.cars = seedCars()
+	return s.saveCarsLocked()
 }
 
 func (s *Store) carBySlug(slug string) (Car, bool) {
@@ -134,18 +165,19 @@ func (s *Store) createBooking(input Booking) (Booking, error) {
 	input.Email = strings.TrimSpace(input.Email)
 	input.PickupLocation = strings.TrimSpace(input.PickupLocation)
 	input.Notes = strings.TrimSpace(input.Notes)
-	if err := validateBooking(input); err != nil {
+	if err := validateBooking(input, false); err != nil {
 		return Booking{}, err
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	input.ID = fmt.Sprintf("PR-%04d", s.nextNumberLocked())
-	input.Status = "Menunggu"
-	input.Total = car.Price * input.Duration
-	if input.WithDriver && car.RentalType != "Dengan Sopir" {
-		input.Total += 250000 * input.Duration
+	number, err := s.nextNumberLocked()
+	if err != nil {
+		return Booking{}, err
 	}
+	input.ID = fmt.Sprintf("PR-%04d", number)
+	input.Status = "Menunggu"
+	input.Total = calcTotal(car, input.Duration, input.WithDriver)
 	input.CreatedAt = time.Now()
 	s.bookings = append([]Booking{input}, s.bookings...)
 	if err := s.saveLocked(); err != nil {
@@ -164,7 +196,7 @@ var wib = func() *time.Location {
 
 var phonePattern = regexp.MustCompile(`^\+?[0-9][0-9 \-]{6,18}[0-9]$`)
 
-func validateBooking(b Booking) error {
+func validateBooking(b Booking, allowPast bool) error {
 	switch {
 	case b.CustomerName == "" || b.Phone == "" || b.StartDate == "" || b.PickupLocation == "":
 		return errors.New("nama, telepon, lokasi, tanggal, dan durasi wajib diisi")
@@ -184,22 +216,40 @@ func validateBooking(b Booking) error {
 	today := time.Now().In(wib).Truncate(24 * time.Hour)
 	y, mo, d := time.Now().In(wib).Date()
 	today = time.Date(y, mo, d, 0, 0, 0, 0, wib)
-	if start.Before(today) {
+	if !allowPast && start.Before(today) {
 		return errors.New("tanggal mulai tidak boleh sudah lewat")
 	}
 	return nil
 }
 
-// nextNumberLocked mengembalikan nomor pesanan berikutnya (maks + 1).
-func (s *Store) nextNumberLocked() int {
-	highest := 1000
-	for _, b := range s.bookings {
-		var n int
-		if _, err := fmt.Sscanf(b.ID, "PR-%d", &n); err == nil && n > highest {
-			highest = n
+// loadMeta memulihkan penghitung nomor pesanan: yang terbesar antara file meta dan nomor yang ada.
+func (s *Store) loadMeta() {
+	s.lastNumber = 1000
+	var meta struct {
+		LastBookingNumber int `json:"last_booking_number"`
+	}
+	if data, err := os.ReadFile(s.metaPath); err == nil {
+		_ = json.Unmarshal(data, &meta)
+		if meta.LastBookingNumber > s.lastNumber {
+			s.lastNumber = meta.LastBookingNumber
 		}
 	}
-	return highest + 1
+	for _, b := range s.bookings {
+		var n int
+		if _, err := fmt.Sscanf(b.ID, "PR-%d", &n); err == nil && n > s.lastNumber {
+			s.lastNumber = n
+		}
+	}
+}
+
+// nextNumberLocked mengambil nomor pesanan berikutnya dan menyimpannya permanen.
+func (s *Store) nextNumberLocked() (int, error) {
+	next := s.lastNumber + 1
+	if err := writeFileAtomic(s.metaPath, map[string]int{"last_booking_number": next}); err != nil {
+		return 0, err
+	}
+	s.lastNumber = next
+	return next, nil
 }
 
 type API struct {
@@ -223,7 +273,17 @@ func (a *API) routes() http.Handler {
 	mux.HandleFunc("GET /api/auth/me", a.auth.me)
 	mux.HandleFunc("POST /api/bookings", a.createBooking)
 	mux.HandleFunc("GET /api/bookings", a.auth.require(a.listBookings))
+	mux.HandleFunc("GET /api/bookings/{id}", a.auth.require(a.getBooking))
+	mux.HandleFunc("PUT /api/bookings/{id}", a.auth.require(a.updateBooking))
 	mux.HandleFunc("PATCH /api/bookings/{id}/status", a.auth.require(a.updateStatus))
+	mux.HandleFunc("DELETE /api/bookings/{id}", a.auth.requireRole("admin", a.deleteBooking))
+	mux.HandleFunc("POST /api/cars", a.auth.requireRole("admin", a.createCar))
+	mux.HandleFunc("PUT /api/cars/{slug}", a.auth.requireRole("admin", a.updateCar))
+	mux.HandleFunc("PATCH /api/cars/{slug}/availability", a.auth.require(a.setAvailability))
+	mux.HandleFunc("DELETE /api/cars/{slug}", a.auth.requireRole("admin", a.deleteCar))
+	mux.HandleFunc("POST /api/uploads", a.auth.requireRole("admin", a.upload))
+	mux.HandleFunc("GET /api/uploads/{name}", a.serveUpload)
+	mux.HandleFunc("GET /api/customers", a.auth.require(a.listCustomers))
 	mux.HandleFunc("GET /api/dashboard", a.auth.require(a.dashboard))
 	return withMiddleware(mux)
 }
@@ -295,8 +355,7 @@ func (a *API) updateStatus(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 400, err.Error())
 		return
 	}
-	allowed := map[string]bool{"Menunggu": true, "Dikonfirmasi": true, "Berjalan": true, "Selesai": true, "Dibatalkan": true}
-	if !allowed[input.Status] {
+	if !bookingStatuses[input.Status] {
 		writeError(w, 422, "status tidak valid")
 		return
 	}
@@ -365,7 +424,7 @@ func withMiddleware(next http.Handler) http.Handler {
 			w.Header().Add("Vary", "Origin")
 		}
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
@@ -425,7 +484,7 @@ func main() {
 		os.Exit(1)
 	}
 	// LISTEN_ADDR=127.0.0.1:8080 di VPS agar API hanya bisa dicapai lewat reverse proxy.
-	server := &http.Server{Addr: env("LISTEN_ADDR", ":"+port), Handler: newAPI(store, newAuth(os.Getenv("AUTH_SECRET"), users)).routes(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second}
+	server := &http.Server{Addr: env("LISTEN_ADDR", ":"+port), Handler: newAPI(store, newAuth(os.Getenv("AUTH_SECRET"), users)).routes(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second}
 
 	go func() {
 		slog.Info("PRESISI Rent Car API berjalan", "url", "http://localhost:"+port)

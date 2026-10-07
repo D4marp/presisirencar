@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
@@ -207,15 +208,35 @@ func (a *Auth) userFrom(r *http.Request) (User, bool) {
 	return u, err == nil
 }
 
+type ctxKey struct{}
+
+// currentUser mengambil pengguna yang sudah diverifikasi oleh require/requireRole.
+func currentUser(r *http.Request) User {
+	u, _ := r.Context().Value(ctxKey{}).(User)
+	return u
+}
+
 // require membungkus handler agar hanya dapat diakses pengguna yang login.
 func (a *Auth) require(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, ok := a.userFrom(r); !ok {
+		u, ok := a.userFrom(r)
+		if !ok {
 			writeError(w, 401, "login diperlukan")
 			return
 		}
-		next(w, r)
+		next(w, r.WithContext(context.WithValue(r.Context(), ctxKey{}, u)))
 	}
+}
+
+// requireRole seperti require, tetapi hanya untuk peran tertentu (mis. "admin").
+func (a *Auth) requireRole(role string, next http.HandlerFunc) http.HandlerFunc {
+	return a.require(func(w http.ResponseWriter, r *http.Request) {
+		if currentUser(r).Role != role {
+			writeError(w, 403, "tidak punya akses untuk tindakan ini")
+			return
+		}
+		next(w, r)
+	})
 }
 
 // adminUsers membuat akun produksi dari environment (tanpa akun demo).

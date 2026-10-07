@@ -36,10 +36,7 @@ func seedBookings(cars []Car) []Booking {
 	out := make([]Booking, 0, len(rows))
 	for i, r := range rows {
 		car := bySlug[r.slug]
-		total := car.Price * r.days
-		if r.driver && car.RentalType != "Dengan Sopir" {
-			total += 250000 * r.days
-		}
+		total := calcTotal(car, r.days, r.driver)
 		start := now.AddDate(0, 0, r.offset)
 		out = append(out, Booking{
 			ID:             fmt.Sprintf("PR-%04d", 1012-i),

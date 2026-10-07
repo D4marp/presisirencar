@@ -36,7 +36,7 @@ Pada start pertama tanpa data, backend mengisi 12 pesanan contoh. Hapus `backend
 ## API
 
 - `GET /api/health`
-- `GET /api/cars`
+- `GET /api/cars`, CRUD mobil `POST/PUT/DELETE /api/cars` (admin), `POST /api/uploads` (foto, admin)
 - `GET /api/cars/{slug}`
 - `POST /api/auth/login`, `GET /api/auth/me`
 - `GET /api/bookings` (login)

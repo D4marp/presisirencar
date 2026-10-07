@@ -25,7 +25,8 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
-import { Logo } from "@/components/logo";
+import { BookingModal } from "@/components/dashboard/booking-modal";
+import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { UnauthorizedError, authedFetch, clearSession, getSession, type SessionUser } from "@/lib/api";
 
 type Row = { id: string; name: string; car: string; date: string; total: string; rawTotal: number; start: string; status: string; tone: string };
@@ -48,6 +49,7 @@ export default function Dashboard() {
   const [apiOnline, setApiOnline] = useState(false);
   const [stats, setStats] = useState<Stats>(emptyStats);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [openBooking, setOpenBooking] = useState<string | null>(null);
   const filtered = useMemo(() => bookings.filter((item) => `${item.id} ${item.name} ${item.car}`.toLowerCase().includes(query.toLowerCase())), [bookings, query]);
 
   const chart = useMemo(() => {
@@ -121,18 +123,7 @@ export default function Dashboard() {
   return (
     <main className="dashboard-shell">
       {notice && <div className="toast"><span><span className="toast-dot" />{notice}</span><button onClick={() => setNotice("")}><X size={15} /></button></div>}
-      <aside className={`sidebar ${sidebar ? "open" : ""}`}>
-        <div className="sidebar-brand"><Logo /><button onClick={() => setSidebar(false)}><X /></button></div>
-        <nav className="side-nav">
-          <small>MENU UTAMA</small>
-          <a className="active" href="#top"><LayoutDashboard /> Ikhtisar</a>
-          <a href="#pesanan"><ClipboardList /> Pesanan <span>{stats.bookings}</span></a>
-          <Link href="/armada"><CarFront /> Lihat armada</Link>
-        </nav>
-        <div className="support-card"><span>Butuh bantuan?</span><p>Tim support siap membantu operasional Anda.</p><a href="tel:+6281362218168">Hubungi support <ChevronRight size={15} /></a></div>
-        <Link href="/" className="back-site">← Kembali ke website</Link>
-      </aside>
-      {sidebar && <button className="sidebar-backdrop" onClick={() => setSidebar(false)} aria-label="Tutup menu" />}
+      <DashboardSidebar active="overview" open={sidebar} onClose={() => setSidebar(false)} bookingCount={stats.bookings} />
 
       <section className="dashboard-content">
         <header className="dash-header">
@@ -180,13 +171,22 @@ export default function Dashboard() {
             <div className="table-scroll">
               <table>
                 <thead><tr><th>ID PESANAN</th><th>PELANGGAN</th><th>KENDARAAN</th><th>TANGGAL SEWA</th><th>TOTAL</th><th>STATUS</th><th /></tr></thead>
-                <tbody>{filtered.map((item) => <tr key={item.id}><td><strong>{item.id}</strong></td><td><div className="customer"><span>{item.name.split(' ').map(x => x[0]).slice(0,2).join('')}</span><strong>{item.name}</strong></div></td><td>{item.car}</td><td>{item.date}</td><td><strong>{item.total}</strong></td><td><span className={`status ${item.tone}`}><i />{item.status}</span></td><td className="row-menu"><button aria-label={`Ubah status ${item.id}`} onClick={() => setOpenMenu(openMenu === item.id ? null : item.id)}><MoreHorizontal size={19} /></button>{openMenu === item.id && <div className="status-menu">{STATUSES.filter((st) => st !== item.status).map((st) => <button key={st} onClick={() => changeStatus(item.id, st)}>{st}</button>)}</div>}</td></tr>)}</tbody>
+                <tbody>{filtered.map((item) => <tr key={item.id}><td><strong>{item.id}</strong></td><td><div className="customer"><span>{item.name.split(' ').map(x => x[0]).slice(0,2).join('')}</span><strong>{item.name}</strong></div></td><td>{item.car}</td><td>{item.date}</td><td><strong>{item.total}</strong></td><td><span className={`status ${item.tone}`}><i />{item.status}</span></td><td className="row-menu"><button aria-label={`Ubah status ${item.id}`} onClick={() => setOpenMenu(openMenu === item.id ? null : item.id)}><MoreHorizontal size={19} /></button>{openMenu === item.id && <div className="status-menu"><button onClick={() => { setOpenMenu(null); setOpenBooking(item.id); }}>Lihat / edit pesanan</button>{STATUSES.filter((st) => st !== item.status).map((st) => <button key={st} onClick={() => changeStatus(item.id, st)}>{st}</button>)}</div>}</td></tr>)}</tbody>
               </table>
             </div>
             {filtered.length === 0 && <div className="empty-state">Pesanan tidak ditemukan.</div>}
           </section>
         </div>
       </section>
+      {openBooking && user && (
+        <BookingModal
+          id={openBooking}
+          isAdmin={user.role === "admin"}
+          onClose={() => setOpenBooking(null)}
+          onChanged={(message) => { setOpenBooking(null); flash(message); load(); }}
+          onUnauthorized={() => { clearSession(); router.replace("/login"); }}
+        />
+      )}
     </main>
   );
 }
