@@ -1,0 +1,165 @@
+/* Brand tokens sampled from the logo: deep navy + metallic gold */
+:root {
+  --navy: #0a1a3c;
+  --navy-2: #12285a;
+  --gold: #b98a2b;
+  --gold-light: #e2bd5a;
+  --coral: #b98a2b;
+  --acid: #e2bd5a;
+  --gold-grad: linear-gradient(135deg, #ecc96a 0%, #c9a13b 52%, #a87a22 100%);
+  --ease: cubic-bezier(.22, .8, .24, 1);
+}
+
+/* White sticky navbar */
+.site-header, .site-header.solid { position: sticky; top: 0; z-index: 60; height: 84px; background: #fff; border-bottom: 1px solid var(--line); transition: box-shadow .3s var(--ease), height .3s var(--ease); }
+.site-header.scrolled { height: 72px; box-shadow: 0 10px 30px rgba(10, 26, 60, .09); border-bottom-color: transparent; }
+.site-header-inner { height: 100%; gap: 28px; }
+.site-header .logo-image { width: 64px; height: 64px; border: 0; transition: width .3s var(--ease), height .3s var(--ease); }
+.site-header.scrolled .logo-image { width: 50px; height: 50px; }
+.site-desktop-nav { margin: 0 auto; gap: 6px; }
+.site-desktop-nav a { position: relative; padding: 10px 14px; color: var(--navy); font-size: 13px; font-weight: 700; transition: color .2s; }
+.site-desktop-nav a::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 4px; height: 2px; background: var(--gold-grad); transform: scaleX(0); transform-origin: left; transition: transform .3s var(--ease); }
+.site-desktop-nav a:hover::after, .site-desktop-nav a.active::after { transform: scaleX(1); }
+.site-desktop-nav a:hover { color: var(--navy); }
+.site-phone { color: var(--navy); font-size: 12px; }
+.site-phone svg { color: var(--gold); }
+.site-mobile-nav { top: 100%; left: 0; right: 0; border-top: 1px solid var(--line); box-shadow: 0 24px 40px rgba(10, 26, 60, .12); animation: dropIn .25s var(--ease); }
+@keyframes dropIn { from { opacity: 0; transform: translateY(-8px); } }
+
+/* Buttons */
+.btn { border-radius: 6px; }
+.btn-gold { background: var(--gold-grad); color: var(--navy); font-weight: 800; box-shadow: 0 8px 20px rgba(185, 138, 43, .28); }
+.btn-gold:hover { background: var(--gold-grad); filter: brightness(1.06); box-shadow: 0 12px 26px rgba(185, 138, 43, .38); }
+.btn-navy { border-radius: 6px; }
+.btn svg { transition: transform .25s var(--ease); }
+.btn:hover svg { transform: translateX(3px); }
+.car-action { background: var(--navy); border-radius: 50%; }
+.car-action:hover { background: var(--gold); }
+
+/* Hero: header now sits above it, so no overlay offset */
+.hero { min-height: 700px; }
+.hero-content { padding-top: 40px; padding-bottom: 130px; }
+.hero-image { transform-origin: 70% 50%; animation: kenburns 24s ease-in-out infinite alternate; }
+@keyframes kenburns { to { transform: scale(1.07); } }
+.hero-shade { background: linear-gradient(95deg, rgba(10, 26, 60, .88) 0%, rgba(10, 26, 60, .55) 48%, rgba(10, 26, 60, .08) 100%); }
+.hero h1, .hero h1 em { font-weight: 800; font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif; }
+.hero-content .eyebrow, .hero-content h1, .hero-content > p, .hero-cta { animation: rise .8s var(--ease) both; }
+.hero-content h1 { animation-delay: .08s; }
+.hero-content > p { animation-delay: .16s; }
+.hero-cta { animation-delay: .24s; }
+.booking-wrap { animation: rise .9s var(--ease) .35s both; }
+.booking-panel { border-top: 0; border-bottom: 4px solid var(--gold); border-radius: 8px; }
+@keyframes rise { from { opacity: 0; transform: translateY(22px); } }
+.booking-wrap { --y: 50%; }
+@keyframes rise-wrap { from { opacity: 0; transform: translate(-50%, 70%); } to { opacity: 1; transform: translate(-50%, 50%); } }
+.booking-wrap { animation-name: rise-wrap; }
+
+/* Scroll reveal */
+.reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+.reveal.in { opacity: 1; transform: none; }
+
+/* Fleet filter */
+.fleet-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: -8px 0 28px; }
+.fleet-tabs button { border: 1px solid var(--line); background: #fff; color: var(--navy); border-radius: 999px; padding: 9px 16px; font-size: 12px; font-weight: 700; transition: all .2s var(--ease); }
+.fleet-tabs button:hover { border-color: var(--navy); }
+.fleet-tabs button.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+.fleet-grid { grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.car-card { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
+.car-card:hover { transform: translateY(-5px); box-shadow: 0 22px 44px rgba(10, 26, 60, .12); }
+.car-image { display: block; border-radius: 0; }
+.car-image img { filter: none; }
+.car-card:hover .car-image img { transform: scale(1.05); }
+.car-content { padding: 18px 20px 20px; }
+.car-badge { top: 12px; bottom: auto; border-radius: 999px; background: #fff; color: var(--navy); }
+
+/* Cost estimator */
+.calc-section { background: var(--navy); color: #fff; position: relative; overflow: hidden; }
+.calc-section::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, transparent 0 46px, rgba(226, 189, 90, .06) 46px 48px); pointer-events: none; }
+.calc-layout { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+.calc-layout h2 { margin: 0 0 18px; font: 800 48px/1.04 "Avenir Next", Avenir, "Segoe UI", sans-serif; }
+.calc-layout p { max-width: 420px; color: rgba(255, 255, 255, .72); line-height: 1.7; font-size: 14px; }
+.calc-card { display: grid; gap: 20px; padding: 28px; background: #fff; color: var(--navy); border-radius: 12px; border-bottom: 5px solid var(--gold); box-shadow: 0 30px 60px rgba(0, 0, 0, .25); }
+.calc-card label { display: grid; gap: 9px; }
+.calc-card small { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.calc-card small b { color: var(--navy); }
+.calc-card select { width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 13px 12px; color: var(--navy); font-size: 14px; font-weight: 600; background: #fff; }
+.calc-card input[type=range] { width: 100%; accent-color: var(--gold); height: 28px; }
+.calc-check { display: flex !important; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; }
+.calc-check input { width: 18px; height: 18px; accent-color: var(--navy); }
+.calc-note { margin: 0; color: var(--muted) !important; font-size: 13px !important; }
+.calc-total { display: flex; align-items: baseline; justify-content: space-between; padding: 18px 0; border-top: 1px dashed #cfd5df; }
+.calc-total span { color: var(--muted); font-size: 12px; font-weight: 700; }
+.calc-total strong { font-size: 34px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 900px) {
+  .site-header, .site-header.scrolled { height: 68px; }
+  .site-header .logo-image, .site-header.scrolled .logo-image { width: 48px; height: 48px; }
+  .site-mobile-nav { top: 100%; left: 0; right: 0; }
+  .hero { min-height: 640px; }
+  .hero-content { padding-bottom: 60px; }
+  .fleet-grid { grid-template-columns: 1fr; }
+  .calc-layout { grid-template-columns: 1fr; gap: 36px; }
+  .calc-layout h2 { font-size: 36px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-image, .hero-content *, .booking-wrap { animation: none !important; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+.trust-grid strong span { display: inline; font: inherit; color: inherit; }
+.trust-grid strong { font-variant-numeric: tabular-nums; }
+
+@keyframes rise-wrap-m { from { opacity: 0; transform: translate(-50%, 24px); } to { opacity: 1; transform: translateX(-50%); } }
+@media (max-width: 900px) {
+  .booking-wrap { animation-name: rise-wrap-m; }
+  .trust-strip { padding-top: 224px; }
+}
+
+/* Login */
+.login-page { min-height: 100vh; display: grid; grid-template-columns: 1.05fr 1fr; background: #fff; }
+.login-side { position: relative; display: flex; align-items: flex-end; padding: 64px; color: #fff; background: linear-gradient(0deg, rgba(10,26,60,.92), rgba(10,26,60,.55)), url(/hero-presisi.jpg) center/cover; }
+.login-side-inner { max-width: 480px; }
+.login-side h1 { margin: 0 0 16px; font: 800 44px/1.05 "Avenir Next", Avenir, "Segoe UI", sans-serif; }
+.login-side p { margin: 0; color: rgba(255,255,255,.78); line-height: 1.7; }
+.login-form-wrap { display: grid; place-items: center; padding: 40px 24px; }
+.login-card { width: min(400px, 100%); display: grid; gap: 16px; }
+.login-card h2 { margin: 10px 0 0; color: var(--navy); font: 800 28px "Avenir Next", Avenir, sans-serif; }
+.login-card > p { margin: -8px 0 6px; color: var(--muted); font-size: 14px; }
+.login-card label { display: grid; gap: 8px; color: var(--navy); font-size: 12px; font-weight: 700; }
+.login-input { display: flex; align-items: center; gap: 10px; border: 1px solid #d5dae2; border-radius: 6px; padding: 0 12px; background: #fff; color: var(--muted); transition: border-color .2s, box-shadow .2s; }
+.login-input:focus-within { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(185,138,43,.18); }
+.login-input input { flex: 1; min-width: 0; border: 0; outline: 0; padding: 14px 0; font-size: 14px; color: var(--navy); background: transparent; }
+.login-input button { border: 0; background: transparent; color: var(--muted); display: grid; }
+.login-card .btn { width: 100%; }
+.login-card .btn:disabled { opacity: .6; cursor: wait; }
+.demo-box { display: grid; gap: 8px; padding: 14px; border: 1px dashed #cdbf95; border-radius: 8px; background: #fbf8ef; }
+.demo-box strong { font-size: 11px; color: var(--navy); text-transform: uppercase; letter-spacing: .06em; }
+.demo-box button { display: flex; justify-content: space-between; gap: 10px; border: 0; padding: 8px 10px; border-radius: 6px; background: #fff; color: var(--navy); font-size: 12px; text-align: left; transition: background .2s; }
+.demo-box button:hover { background: #f1e8cc; }
+.demo-box code { font: 11px ui-monospace, Menlo, monospace; color: #6b5a22; }
+.login-back { color: var(--muted); font-size: 12px; text-align: center; }
+@media (max-width: 900px) { .login-page { grid-template-columns: 1fr; } .login-side { display: none; } }
+
+/* Dashboard additions */
+.status.red { color: #b42318; background: #fdecea; }
+.row-menu { position: relative; }
+.status-menu { position: absolute; z-index: 20; right: 10px; top: 80%; min-width: 150px; display: grid; padding: 6px; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 16px 36px rgba(10,26,60,.16); }
+.status-menu button { border: 0; background: transparent; padding: 9px 10px; border-radius: 5px; text-align: left; color: var(--navy); font-size: 12px; font-weight: 600; }
+.status-menu button:hover { background: #f4f1e6; }
+
+/* Hero fix: only the photo layer is clipped, so the booking panel can overlap the section below */
+.hero { overflow: visible; min-height: clamp(580px, calc(100svh - 84px), 780px); }
+.hero-media { position: absolute; inset: 0; overflow: hidden; z-index: 0; }
+.hero-media .hero-shade { z-index: 1; }
+.hero-content { padding-top: 64px; padding-bottom: 150px; }
+.trust-strip { padding-top: 120px; }
+@media (max-width: 900px) {
+  .hero { min-height: 640px; }
+  .hero-content { padding-top: 48px; padding-bottom: 60px; }
+  .trust-strip { padding-top: 224px; }
+}
+
+/* Google Maps embed on contact page */
+.map-embed { position: relative; min-height: 320px; background: #e8ebf0; }
+.map-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+@media (max-width: 900px) { .map-embed { min-height: 260px; } }
