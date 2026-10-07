@@ -1,0 +1,42 @@
+# Versi Docker (API di 127.0.0.1:8081). TAMBAHKAN blok ini ke Caddyfile yang sudah ada, jangan menimpanya.
+# Caddy mengurus sertifikat HTTPS (Let's Encrypt) dan perpanjangannya otomatis.
+api.contoh.com {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# Unggah foto mobil: batas 5 MB (hanya admin yang lolos di sisi API)
+	@upload path /api/uploads
+	handle @upload {
+		request_body {
+			max_size 5MB
+		}
+		reverse_proxy 127.0.0.1:8081 {
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	# API lain hanya menerima JSON kecil
+	@api path /api/*
+	handle @api {
+		request_body {
+			max_size 64KB
+		}
+		reverse_proxy 127.0.0.1:8081 {
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+	handle {
+		respond "Not found" 404
+	}
+
+	log {
+		output file /var/log/caddy/presisi-api.log
+	}
+}

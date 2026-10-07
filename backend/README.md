@@ -31,7 +31,28 @@ go test ./...
 go run .          # http://localhost:8080 (akun demo aktif: admin / Presisi#2026)
 ```
 
-## Deploy ke VPS (Ubuntu/Debian) — hardening maksimal
+## Deploy dengan Docker (disarankan)
+
+Teruji: build image, login dengan akun dari `.env`, akun demo ditolak, CRUD mobil dan unggah foto, data tetap ada setelah restart kontainer, berjalan non-root dengan filesystem read-only.
+
+```bash
+git clone https://github.com/D4marp/presisi-rent-car--backend.git && cd presisi-rent-car--backend
+cp .env.docker.example .env && chmod 600 .env
+nano .env                       # AUTH_SECRET (openssl rand -hex 32), ADMIN_PASSWORD, CORS_ORIGIN
+docker compose up -d --build
+docker compose ps               # status harus "healthy"
+curl -s http://127.0.0.1:8081/api/health
+```
+
+- API hanya dipublikasikan ke `127.0.0.1:8081` (ubah dengan `API_HOST_PORT` di `.env` bila bentrok). **Jangan** mengubah port mapping menjadi `8081:8080`: Docker melewati firewall ufw untuk port yang dipublikasikan, sehingga API akan terbuka ke internet.
+- Data (daftar mobil dan foto) ada di volume Docker `presisi-rent-car_presisi-data` dan bertahan saat kontainer dibuat ulang.
+- HTTPS: tambahkan blok `deploy/Caddyfile.docker` ke Caddyfile server (jangan menimpa konfigurasi yang sudah ada), lalu `caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy`.
+- Update versi baru: `git pull && docker compose up -d --build`.
+- Backup volume:
+  `docker run --rm -v presisi-rent-car_presisi-data:/data -v /var/backups/presisi:/backup alpine tar -czf /backup/presisi-$(date +%F).tar.gz -C /data .`
+- Log: `docker compose logs -f api`.
+
+## Alternatif: tanpa Docker (systemd) — hardening maksimal
 
 Asumsi: domain API `api.contoh.com` sudah mengarah ke IP VPS, dan Go 1.23+ terpasang di mesin build (atau build di laptop lalu `scp` binary).
 
