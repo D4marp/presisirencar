@@ -10,6 +10,6 @@ export function SiteFooter() {
       <div><h4>Kontak</h4><a href="tel:+6281362218168">0813-6221-8168</a><a href="https://maps.app.goo.gl/HAZA91Ak9pzMX3GA7?g_st=aw" target="_blank">Jl. Sukun I No.46<br />Srondol Wetan, Banyumanik<br />Semarang 50264</a></div>
       <div><h4>Akses</h4><p>Senin — Minggu<br /><strong>24 jam</strong></p><Link href="/login">Masuk staf</Link></div>
     </div>
-    <div className="container footer-bottom"><span>© 2026 PRESISI Rencar</span><span>Aman · Nyaman · Terpercaya</span></div>
+    <div className="container footer-bottom"><span>© 2026 PRESISI Rent Car</span><span>Aman · Nyaman · Terpercaya</span></div>
   </footer>;
 }

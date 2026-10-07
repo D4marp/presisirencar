@@ -1,4 +1,4 @@
-# PRESISI Rencar
+# PRESISI Rent Car
 
 Website rental mobil dan dashboard operasional menggunakan Next.js, Tailwind CSS, dan backend Go ringan tanpa framework.
 
