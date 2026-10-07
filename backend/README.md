@@ -46,7 +46,8 @@ curl -s http://127.0.0.1:8081/api/health
 
 - API hanya dipublikasikan ke `127.0.0.1:8081` (ubah dengan `API_HOST_PORT` di `.env` bila bentrok). **Jangan** mengubah port mapping menjadi `8081:8080`: Docker melewati firewall ufw untuk port yang dipublikasikan, sehingga API akan terbuka ke internet.
 - Data (daftar mobil dan foto) ada di volume Docker `presisi-rent-car_presisi-data` dan bertahan saat kontainer dibuat ulang.
-- HTTPS: tambahkan blok `deploy/Caddyfile.docker` ke Caddyfile server (jangan menimpa konfigurasi yang sudah ada), lalu `caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy`.
+- HTTPS dengan **Caddy**: tambahkan blok `deploy/Caddyfile.docker` ke Caddyfile server (jangan menimpa konfigurasi yang sudah ada), lalu `caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy`.
+- HTTPS dengan **nginx** (bila server sudah memakai nginx): salin `deploy/nginx-api.conf` ke `/etc/nginx/sites-available/presisi-api`, ganti `API_DOMAIN_ANDA`, aktifkan lewat `sites-enabled`, `nginx -t && systemctl reload nginx`, lalu `certbot --nginx -d DOMAIN_API`.
 - Update versi baru: `git pull && docker compose up -d --build`.
 - Backup volume:
   `docker run --rm -v presisi-rent-car_presisi-data:/data -v /var/backups/presisi:/backup alpine tar -czf /backup/presisi-$(date +%F).tar.gz -C /data .`
