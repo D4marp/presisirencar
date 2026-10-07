@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { ArrowRight, CalendarDays, Car, Clock, Minus, Plus, ShieldCheck, MessageCircle } from "lucide-react";
+import { HERO_VIDEO } from "@/data/business";
 import { endDate, formatDate, localDate, typeGroups, waLink, type Mode } from "@/lib/booking";
 
 export type Search = { mode: Mode; type: string; date: string; days: number };
@@ -13,17 +14,26 @@ export function Hero({ search, onChange, onSearch }: { search: Search; onChange:
   const range = search.days > 1 ? `${formatDate(search.date)} – ${formatDate(endDate(search.date, search.days))}` : formatDate(search.date);
 
   return (
-    <section className="bg-white">
-      <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 pb-14 pt-8 md:px-6 md:pb-20 md:pt-14 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
-        <div>
-          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
-            <ShieldCheck className="size-4 text-emerald-600" aria-hidden /> Rental mobil Semarang · Operasional 24 jam
+    <section className="relative isolate overflow-hidden bg-slate-900">
+      <div className="absolute inset-0 -z-10" aria-hidden>
+        {HERO_VIDEO ? (
+          <video className="hero-bg-zoom size-full object-cover object-[70%_center]" src={HERO_VIDEO} poster="/hero-presisi.jpg" autoPlay muted loop playsInline preload="metadata" />
+        ) : (
+          <Image src="/hero-presisi.jpg" alt="" fill priority sizes="100vw" className="hero-bg-zoom object-cover object-[72%_center]" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/55 to-slate-950/10 max-lg:bg-slate-950/65" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/40 to-transparent" />
+      </div>
+      <div className="mx-auto flex w-full max-w-6xl items-center px-4 pb-14 pt-10 md:px-6 md:pb-20 md:pt-16 lg:min-h-[calc(100svh-84px)] lg:max-h-[860px]">
+        <div className="w-full max-w-xl">
+          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm">
+            <ShieldCheck className="size-4 text-emerald-300" aria-hidden /> Rental mobil Semarang · Operasional 24 jam
           </p>
-          <h1 className="text-[2rem] font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem]">
+          <h1 className="text-[2rem] font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[3.4rem]">
             Sewa Mobil di Semarang — Rapi, Tepat Waktu &amp; Tanpa Ribet
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600 md:text-lg">
-            Pilihan armada terawat untuk perjalanan bisnis, wisata keluarga, atau harian. Bisa <strong className="font-semibold text-slate-900">Lepas Kunci</strong> / <strong className="font-semibold text-slate-900">Dengan Driver</strong>.
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-200 md:text-lg">
+            Pilihan armada terawat untuk perjalanan bisnis, wisata keluarga, atau harian. Bisa <strong className="font-semibold text-white">Lepas Kunci</strong> / <strong className="font-semibold text-white">Dengan Driver</strong>.
           </p>
 
           <form
@@ -92,12 +102,6 @@ export function Hero({ search, onChange, onSearch }: { search: Search; onChange:
               <MessageCircle className="size-4" aria-hidden /> Butuh cepat hari ini? Chat CS langsung
             </a>
           </form>
-        </div>
-
-        <div className="relative">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 shadow-md lg:aspect-[4/5]">
-            <Image src="/hero-presisi.jpg" alt="Toyota Alphard PRESISI Rent Car di Semarang" fill priority sizes="(max-width: 1024px) 100vw, 45vw" className="object-cover object-[68%_center]" />
-          </div>
         </div>
       </div>
     </section>

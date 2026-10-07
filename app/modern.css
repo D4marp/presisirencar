@@ -16,6 +16,11 @@ body { font-family: var(--font-jakarta), "Segoe UI", system-ui, sans-serif; }
 h1, h2, h3, h4, .btn, button, input, select, textarea { font-family: inherit; }
 .btn-gold { color: var(--navy); }
 
+/* Hero background: slow cinematic push-in */
+.hero-bg-zoom { transform-origin: 72% 50%; animation: hero-push 26s ease-in-out infinite alternate; }
+@keyframes hero-push { to { transform: scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .hero-bg-zoom { animation: none; } }
+
 /* White sticky navbar */
 .site-header, .site-header.solid { position: sticky; top: 0; z-index: 60; height: 84px; background: #fff; border-bottom: 1px solid var(--line); transition: box-shadow .3s var(--ease), height .3s var(--ease); }
 .site-header.scrolled { height: 72px; box-shadow: 0 10px 30px rgba(10, 26, 60, .09); border-bottom-color: transparent; }

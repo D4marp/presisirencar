@@ -7,6 +7,10 @@ export const PHONE_HREF = "tel:+6281362218168";
 export const MAPS_URL = "https://maps.app.goo.gl/HAZA91Ak9pzMX3GA7?g_st=aw";
 export const ADDRESS = "Jl. Sukun I No.46, Srondol Wetan, Banyumanik, Semarang 50264";
 
+// Video latar hero (opsional). Taruh file di public/, mis. "/hero.mp4" (MP4 H.264, 1080p,
+// tanpa suara, 5-10 detik loop, idealnya < 8 MB). null = pakai foto /hero-presisi.jpg.
+export const HERO_VIDEO: string | null = null;
+
 // Harus sama dengan biaya pengemudi di backend (backend/main.go).
 export const DRIVER_FEE_PER_DAY = 250000;
 
