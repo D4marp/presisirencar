@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "./visual-refresh.css";
 import "./modern.css";
 import { FloatingWhatsApp } from "@/components/floating-whatsapp";
+
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", display: "swap" });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const description =
@@ -45,7 +48,7 @@ const businessSchema = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="id">
+    <html lang="id" className={jakarta.variable}>
       <body>
         {children}
         <FloatingWhatsApp />

@@ -14,7 +14,7 @@
 }
 
 html { background: var(--paper); }
-body { background: var(--paper); color: var(--ink); font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-jakarta), "Segoe UI", sans-serif; }
 button, input, select, textarea { font-family: inherit; }
 ::selection { color: var(--navy); background: var(--acid); }
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--coral); outline-offset: 3px; }
@@ -65,7 +65,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .eyebrow { color: var(--coral); font: 750 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0; text-transform: uppercase; gap: 11px; margin-bottom: 20px; }
 .eyebrow span { width: 31px; height: 3px; background: currentColor; }
 .eyebrow.light { color: var(--acid); }
-.hero h1 { max-width: 670px; margin: 0 0 20px; color: white; font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif; font-size: 76px; font-weight: 800; line-height: .98; letter-spacing: 0; }
+.hero h1 { max-width: 670px; margin: 0 0 20px; color: white; font-family: var(--font-jakarta), "Segoe UI", sans-serif; font-size: 76px; font-weight: 800; line-height: .98; letter-spacing: 0; }
 .hero h1 em { color: var(--acid); font-style: normal; }
 .hero-content > p { max-width: 460px; margin-bottom: 27px; color: rgba(255,255,255,.83); font-size: 15px; line-height: 1.65; }
 .hero-cta { gap: 23px; }
@@ -86,13 +86,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .trust-grid { border-bottom: 1px solid var(--line); padding-bottom: 27px; }
 .trust-grid > div { justify-content: flex-start; padding-left: 32px; }
 .trust-grid > div:first-child { padding-left: 0; }
-.trust-grid strong { color: var(--navy); font: 800 27px "Avenir Next", Avenir, sans-serif; }
+.trust-grid strong { color: var(--navy); font: 800 27px var(--font-jakarta), "Segoe UI", sans-serif; }
 .trust-grid span { font: 10px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
 .trust-grid .stars { color: var(--coral); font-size: 11px; letter-spacing: 0; }
 
 .section { padding: 100px 0; }
 .section-heading { align-items: flex-end; gap: 42px; margin-bottom: 40px; }
-.section-heading h2, .service-copy h2, .faq-layout h2, .cta-banner h2 { color: var(--navy); font: 800 48px/1.04 "Avenir Next", Avenir, "Segoe UI", sans-serif; letter-spacing: 0; }
+.section-heading h2, .service-copy h2, .faq-layout h2, .cta-banner h2 { color: var(--navy); font: 800 48px/1.04 var(--font-jakarta), "Segoe UI", sans-serif; letter-spacing: 0; }
 .section-heading > p { max-width: 380px; font-size: 13px; line-height: 1.65; }
 .fleet-section { background: var(--paper); }
 .fleet-grid { gap: 14px; }
@@ -103,12 +103,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .car-badge { top: auto; bottom: 12px; left: 12px; padding: 8px 10px; background: var(--acid); color: var(--navy); font: 700 8px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0; }
 .car-content { padding: 18px 0 0; }
 .car-content > small, .catalog-info > small { color: var(--coral); font: 700 9px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0; }
-.car-content h3 { margin: 7px 0 12px; color: var(--navy); font: 750 21px "Avenir Next", Avenir, sans-serif; }
+.car-content h3 { margin: 7px 0 12px; color: var(--navy); font: 750 21px var(--font-jakarta), "Segoe UI", sans-serif; }
 .car-meta { gap: 18px; padding-bottom: 15px; border-color: var(--line); font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .car-meta svg { color: var(--coral); }
 .car-footer { align-items: center; padding-top: 14px; }
 .car-footer small { font: 9px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
-.car-footer strong { color: var(--navy); font: 750 16px "Avenir Next", Avenir, sans-serif; }
+.car-footer strong { color: var(--navy); font: 750 16px var(--font-jakarta), "Segoe UI", sans-serif; }
 .car-footer em { font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .car-action { width: 38px; height: 38px; display: grid; place-items: center; background: var(--coral); color: white; transition: background .2s, transform .2s; }
 .car-action:hover { background: var(--navy); transform: translateX(3px); }
@@ -120,7 +120,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .service-visual > img { filter: saturate(.76); }
 .quote-card { right: -18px; bottom: 20px; width: 270px; padding: 20px; background: var(--coral); box-shadow: none; }
 .quote-mark { color: var(--navy); }
-.quote-card p { font: 700 17px/1.35 "Avenir Next", Avenir, sans-serif; }
+.quote-card p { font: 700 17px/1.35 var(--font-jakarta), "Segoe UI", sans-serif; }
 .quote-card span { color: rgba(255,255,255,.78); font: 9px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .service-copy > p { color: #5e6878; font-size: 13px; }
 .benefit-list > div { border-color: #d9dce1; }
@@ -130,12 +130,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 .steps-section { position: relative; background: var(--navy); }
 .steps-section::after { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 8px; background: repeating-linear-gradient(to bottom, var(--acid) 0 28px, transparent 28px 48px); }
-.steps-section .section-heading h2 { color: white; font: 800 46px/1.05 "Avenir Next", Avenir, sans-serif; }
+.steps-section .section-heading h2 { color: white; font: 800 46px/1.05 var(--font-jakarta), "Segoe UI", sans-serif; }
 .steps-section .section-heading > p { color: rgba(255,255,255,.68); }
 .steps-grid { border-top: 1px solid rgba(255,255,255,.23); padding-top: 34px; }
 .step { gap: 17px; padding-inline: 34px; }
 .step-number { color: var(--acid); font: 800 25px ui-monospace, SFMono-Regular, Menlo, monospace; }
-.step h3 { font: 750 14px "Avenir Next", Avenir, sans-serif; }
+.step h3 { font: 750 14px var(--font-jakarta), "Segoe UI", sans-serif; }
 .step p { color: rgba(255,255,255,.67); font-size: 12px; }
 .step-arrow { color: var(--acid); background: var(--navy); }
 
@@ -143,14 +143,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .testimonial-section .eyebrow { color: var(--navy); }
 .testimonial-section .section-heading h2 { color: white; }
 .testimonial-rating { display: flex; align-items: center; gap: 12px; color: white; }
-.testimonial-rating > strong { font: 800 42px "Avenir Next", Avenir, sans-serif; }
+.testimonial-rating > strong { font: 800 42px var(--font-jakarta), "Segoe UI", sans-serif; }
 .testimonial-rating span { display: flex; flex-direction: column; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .testimonial-rating i { color: var(--acid); font-style: normal; }
 .testimonial-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid rgba(255,255,255,.4); }
 .testimonial-grid article { padding: 22px 24px 0 0; }
 .testimonial-grid article + article { padding-left: 24px; border-left: 1px solid rgba(255,255,255,.3); }
 .testimonial-stars { color: var(--acid); font-size: 12px; }
-.testimonial-grid blockquote { min-height: 100px; margin: 16px 0 22px; color: white; font: 650 16px/1.45 "Avenir Next", Avenir, sans-serif; }
+.testimonial-grid blockquote { min-height: 100px; margin: 16px 0 22px; color: white; font: 650 16px/1.45 var(--font-jakarta), "Segoe UI", sans-serif; }
 .testimonial-grid article > div:last-child { display: flex; align-items: center; gap: 11px; }
 .testimonial-grid article > div:last-child > span { width: 36px; height: 36px; display: grid; place-items: center; background: var(--acid); color: var(--navy); font: 800 10px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .testimonial-grid p { display: flex; flex-direction: column; gap: 3px; margin: 0; color: white; font-size: 10px; }
@@ -180,7 +180,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .page-hero-image { object-fit: cover; object-position: center 58%; filter: saturate(.78); }
 .page-hero-glow { display: none; }
 .page-hero-content { z-index: 2; padding-block: 70px; }
-.page-hero h1 { max-width: 720px; color: white; font: 800 52px/1.02 "Avenir Next", Avenir, sans-serif; letter-spacing: 0; }
+.page-hero h1 { max-width: 720px; color: white; font: 800 52px/1.02 var(--font-jakarta), "Segoe UI", sans-serif; letter-spacing: 0; }
 .page-hero p { max-width: 590px; margin-top: 17px; color: rgba(255,255,255,.72); font-size: 13px; }
 .inner-main { padding-block: 76px 94px; background: var(--paper); }
 
@@ -201,11 +201,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .catalog-image > span { background: var(--acid); font: 700 8px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .catalog-image > i { font: 700 8px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .catalog-info { padding: 16px 0 0; }
-.catalog-info h2 { font: 750 23px "Avenir Next", Avenir, sans-serif; }
+.catalog-info h2 { font: 750 23px var(--font-jakarta), "Segoe UI", sans-serif; }
 .catalog-spec { gap: 17px; border-color: var(--line); }
 .catalog-spec span { font: 9px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .catalog-spec svg { color: var(--coral); }
-.catalog-footer strong { font: 750 16px "Avenir Next", Avenir, sans-serif; }
+.catalog-footer strong { font: 750 16px var(--font-jakarta), "Segoe UI", sans-serif; }
 .catalog-footer > a { border-color: var(--coral); font: 700 9px ui-monospace, SFMono-Regular, Menlo, monospace; }
 
 .car-detail-page { background: var(--paper); }
@@ -215,63 +215,63 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .detail-photo img { filter: saturate(.82); }
 .detail-photo > span { background: var(--acid); font: 700 9px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .detail-card { border: 0; border-top: 5px solid var(--coral); padding: 30px; }
-.detail-card h1 { font: 800 38px/1.03 "Avenir Next", Avenir, sans-serif; letter-spacing: 0; }
+.detail-card h1 { font: 800 38px/1.03 var(--font-jakarta), "Segoe UI", sans-serif; letter-spacing: 0; }
 .detail-card > p { font-size: 12px; }
-.detail-price strong { font: 800 25px "Avenir Next", Avenir, sans-serif; }
+.detail-price strong { font: 800 25px var(--font-jakarta), "Segoe UI", sans-serif; }
 .detail-specs > div { border-color: var(--line); color: var(--coral); }
-.detail-lower h2 { font: 800 34px/1.06 "Avenir Next", Avenir, sans-serif; }
+.detail-lower h2 { font: 800 34px/1.06 var(--font-jakarta), "Segoe UI", sans-serif; }
 .feature-grid > div { font-size: 11px; }
 .detail-lower > aside { background: var(--navy); }
 
 .booking-page-grid { gap: 26px; }
 .booking-form, .booking-success { border: 0; border-top: 5px solid var(--coral); padding: 32px; }
 .form-section-title > span { width: 32px; height: 32px; background: var(--acid); color: var(--navy); font: 800 10px ui-monospace, SFMono-Regular, Menlo, monospace; }
-.form-section-title h2 { font: 800 19px "Avenir Next", Avenir, sans-serif; }
+.form-section-title h2 { font: 800 19px var(--font-jakarta), "Segoe UI", sans-serif; }
 .form-section-title p { font-size: 10px; }
-.form-grid label, .contact-form label { font: 700 10px "Avenir Next", Avenir, sans-serif; }
+.form-grid label, .contact-form label { font: 700 10px var(--font-jakarta), "Segoe UI", sans-serif; }
 .form-grid input, .form-grid select, .form-grid textarea, .contact-form input, .contact-form textarea { border-color: var(--line); border-radius: 0; font-size: 12px; }
 .form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus, .contact-form input:focus, .contact-form textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(200,154,56,.14); }
 .checkbox-label { border-color: var(--line) !important; }
 .booking-summary { top: 24px; background: var(--navy); border-top: 5px solid var(--acid); }
-.booking-summary h2 { font: 800 26px "Avenir Next", Avenir, sans-serif; }
+.booking-summary h2 { font: 800 26px var(--font-jakarta), "Segoe UI", sans-serif; }
 .booking-summary > small, .summary-trust { color: var(--acid); }
-.summary-total strong { color: var(--acid); font: 800 22px "Avenir Next", Avenir, sans-serif; }
-.booking-success h1 { font: 800 36px/1.05 "Avenir Next", Avenir, sans-serif; }
+.summary-total strong { color: var(--acid); font: 800 22px var(--font-jakarta), "Segoe UI", sans-serif; }
+.booking-success h1 { font: 800 36px/1.05 var(--font-jakarta), "Segoe UI", sans-serif; }
 
-.section-intro h2, .about-copy h2, .contact-grid h2 { font: 800 43px/1.05 "Avenir Next", Avenir, sans-serif; letter-spacing: 0; }
+.section-intro h2, .about-copy h2, .contact-grid h2 { font: 800 43px/1.05 var(--font-jakarta), "Segoe UI", sans-serif; letter-spacing: 0; }
 .section-intro > p, .about-copy > p, .contact-grid section > p { font-size: 12px; }
 .services-grid { border-color: var(--line); }
 .services-grid article { min-height: 260px; padding: 25px; }
 .services-grid article > span { border-radius: 0; background: var(--navy); color: var(--acid); }
-.services-grid h3 { font: 750 20px "Avenir Next", Avenir, sans-serif; }
+.services-grid h3 { font: 750 20px var(--font-jakarta), "Segoe UI", sans-serif; }
 .services-grid p { font-size: 11px; }
 .services-grid a { border-bottom: 1px solid var(--coral); padding-bottom: 4px; font: 700 9px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .business-banner { padding: 40px; background: var(--navy); border-left: 7px solid var(--acid); }
-.business-banner h2 { font: 800 32px/1.08 "Avenir Next", Avenir, sans-serif; }
+.business-banner h2 { font: 800 32px/1.08 var(--font-jakarta), "Segoe UI", sans-serif; }
 .about-photo { min-height: 530px; }
 .about-photo > div { right: -16px; background: var(--acid); color: var(--navy); }
 .about-copy h2 { margin-bottom: 20px; }
 .values-grid article { border-color: var(--line); }
 .values-grid svg { color: var(--coral); }
-.values-grid h3 { font: 800 23px "Avenir Next", Avenir, sans-serif; }
+.values-grid h3 { font: 800 23px var(--font-jakarta), "Segoe UI", sans-serif; }
 
 .faq-page-grid { gap: 72px; }
 .faq-page-grid > aside > div { border-top: 4px solid var(--acid); }
-.faq-group h2 { font: 800 23px "Avenir Next", Avenir, sans-serif; }
+.faq-group h2 { font: 800 23px var(--font-jakarta), "Segoe UI", sans-serif; }
 .faq-group button { border-color: var(--line); }
 .faq-group button > span { gap: 20px; }
 .faq-group button strong { font-size: 12px; }
 .faq-group button svg { color: var(--coral); flex: none; }
 .faq-group button p { font-size: 11px; }
 .faq-cta { background: var(--acid); }
-.faq-cta h2 { color: var(--navy); font: 800 23px "Avenir Next", Avenir, sans-serif; }
+.faq-cta h2 { color: var(--navy); font: 800 23px var(--font-jakarta), "Segoe UI", sans-serif; }
 .contact-list > * { border-color: var(--line); }
 .contact-list > * > span { background: var(--navy); color: var(--acid); }
 .contact-list small { font: 8px ui-monospace, SFMono-Regular, Menlo, monospace; }
-.contact-list strong { font: 700 10px "Avenir Next", Avenir, sans-serif; }
+.contact-list strong { font: 700 10px var(--font-jakarta), "Segoe UI", sans-serif; }
 .contact-form { border-top: 5px solid var(--gold); background: var(--cream); }
 .contact-form > small { color: var(--coral); font: 700 9px ui-monospace, SFMono-Regular, Menlo, monospace; }
-.contact-form h2 { font: 800 27px "Avenir Next", Avenir, sans-serif; }
+.contact-form h2 { font: 800 27px var(--font-jakarta), "Segoe UI", sans-serif; }
 .location-card { background: var(--navy); }
 .map-pattern { background: var(--navy-2); }
 .map-pattern::before, .map-pattern::after { border-radius: 0; transform: rotate(24deg); }
@@ -297,7 +297,7 @@ footer { background: #05142d; border-top: 7px solid var(--gold); }
 .support-card { border-color: rgba(255,255,255,.2); background: transparent; }
 .support-card span { color: var(--acid); }
 .dash-header { background: var(--paper); border-color: var(--line); }
-.dash-header h1 { color: var(--navy); font: 800 21px "Avenir Next", Avenir, sans-serif; }
+.dash-header h1 { color: var(--navy); font: 800 21px var(--font-jakarta), "Segoe UI", sans-serif; }
 .dash-search { border-color: var(--line); }
 .dash-search:focus-within { border-color: var(--coral); }
 .icon-button { border-color: var(--line); border-radius: 0; }
@@ -314,15 +314,15 @@ footer { background: #05142d; border-top: 7px solid var(--gold); }
 .stat-icon.blue { background: #e8eff7; color: #315f91; }
 .stat-icon.green { background: #edf3e7; color: #52713d; }
 .stat-card > small { font: 700 9px ui-monospace, SFMono-Regular, Menlo, monospace; }
-.stat-card > strong { color: var(--navy); font: 800 25px "Avenir Next", Avenir, sans-serif; }
+.stat-card > strong { color: var(--navy); font: 800 25px var(--font-jakarta), "Segoe UI", sans-serif; }
 .stat-card p { font: 9px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .panel { border: 0; border-top: 3px solid var(--navy); }
 .panel-heading { border-color: var(--line); }
-.panel-heading h2 { font: 800 13px "Avenir Next", Avenir, sans-serif; }
+.panel-heading h2 { font: 800 13px var(--font-jakarta), "Segoe UI", sans-serif; }
 .panel-heading p { font-size: 9px; }
 .select-control { border-color: var(--line); }
 .select-control select { background: white; }
-.revenue-top strong { font: 800 22px "Avenir Next", Avenir, sans-serif; }
+.revenue-top strong { font: 800 22px var(--font-jakarta), "Segoe UI", sans-serif; }
 .bar { border-radius: 0; background: #d5dbe3; }
 .bar-column:nth-child(9) .bar { background: var(--coral); }
 .donut { background: conic-gradient(var(--navy) 0 60%, var(--coral) 60% 87%, var(--acid) 87% 100%); }

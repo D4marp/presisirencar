@@ -1,11 +1,34 @@
 "use client";
 
+import { MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { cars } from "@/data/cars";
+import { rp, waLink } from "@/lib/booking";
 
+const minPrice = Math.min(...cars.filter((c) => c.available).map((c) => c.price));
+
+// Mobile (< 768px): bar tetap di bawah dengan harga mulai-dari + tombol WhatsApp.
+// Desktop: tombol WhatsApp mengambang.
 export function FloatingWhatsApp() {
   const pathname = usePathname();
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/login")) return null;
+  const href = waLink("Halo PRESISI Rent Car, saya ingin tanya sewa mobil.");
+
   return (
-    <a className="floating-whatsapp" href="https://wa.me/6281362218168" target="_blank" aria-label="Chat PRESISI Rencar melalui WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11.8 11.8 0 0 0 12.1 0C5.6 0 .3 5.3.3 11.8c0 2.1.5 4.2 1.6 6L.2 24l6.3-1.7c1.7.9 3.6 1.4 5.6 1.4 6.5 0 11.8-5.3 11.8-11.8 0-3.2-1.2-6.1-3.4-8.4ZM12.1 21.7c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4a9.7 9.7 0 1 1 8.3 4.6Zm5.3-7.3c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.7.2-.2.3-.8.9-1 1.1-.2.2-.4.2-.7.1-1.8-.9-3-1.6-4.2-3.7-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.6l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.9s1.2 3.3 1.4 3.5c.2.2 2.4 3.7 5.9 5.2 2.2 1 3.1 1 4.2.8.7-.1 1.7-.7 1.9-1.3.2-.6.2-1.2.2-1.3-.2-.1-.4-.2-.7-.3Z"/></svg><span>Chat sekarang</span></a>
+    <>
+      <div className="h-[76px] md:hidden" aria-hidden />
+      <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-3 shadow-[0_-4px_16px_rgba(15,23,42,.08)] md:hidden" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+        <p className="leading-tight">
+          <span className="block text-xs text-slate-500">Sewa mulai</span>
+          <span className="text-lg font-extrabold text-slate-900">{rp(minPrice).replace(/\.000$/, "rb")}<span className="text-sm font-semibold text-slate-500">/hr</span></span>
+        </p>
+        <a href={href} target="_blank" rel="noreferrer" className="inline-flex h-12 items-center gap-2 rounded-xl bg-emerald-700 px-5 text-sm font-bold text-white active:bg-emerald-800">
+          <MessageCircle className="size-5" aria-hidden /> Chat CS / Booking
+        </a>
+      </div>
+      <a href={href} target="_blank" rel="noreferrer" aria-label="Chat PRESISI Rent Car melalui WhatsApp" className="fixed bottom-6 right-6 z-50 hidden h-14 items-center gap-2 rounded-full bg-emerald-700 px-5 text-sm font-bold text-white shadow-lg transition-colors hover:bg-emerald-800 md:inline-flex">
+        <MessageCircle className="size-5" aria-hidden /> Chat sekarang
+      </a>
+    </>
   );
 }

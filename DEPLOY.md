@@ -31,6 +31,17 @@ Variabel ini dibaca saat **build**:
 
 `npm ci && npm run build && npm start`. Di Vercel cukup isi dua variabel di atas.
 
+## 2b. Mengisi data asli klien (`data/business.ts`)
+
+Beranda sengaja **tidak** menampilkan klaim yang belum terbukti. Isi file ini dengan data asli:
+
+| Isi | Efek di website |
+| --- | --- |
+| `googleSummary = { rating: 4.8, count: 87 }` | Menampilkan badge "4.8 ★ Google Review" di strip kepercayaan dan bagian ulasan. Isi hanya dengan angka dari Google Business Profile. |
+| `reviews = [{ author, tag, rating, text }]` | Menampilkan kartu ulasan. Salin dari Google Maps dengan izin pemberi ulasan. Kosong = tampil tautan ke Google Maps. |
+| `deliveryOptions[].fee` | Biaya antar per lokasi di estimator. `null` = tampil "Dikonfirmasi CS" dan tidak masuk total. `0` = "Gratis". |
+| `DRIVER_FEE_PER_DAY` | Harus sama dengan backend (`backend/main.go`, 250000). |
+
 ## 3. Checklist sebelum go-live
 
 - [ ] `AUTH_SECRET` dan `ADMIN_PASSWORD` produksi sudah diatur (bukan nilai contoh).
