@@ -22,6 +22,12 @@ import { SiteHeader } from "@/components/site-header";
 import { CountUp, Reveal } from "@/components/motion";
 import { cars, rupiah } from "@/data/cars";
 
+function localDate(offsetDays = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 const tabs = ["Semua", "City Car", "Family MPV", "Business MPV", "Premium SUV", "Mobil Listrik"];
 
 const faqs = [
@@ -33,7 +39,7 @@ const faqs = [
 export default function Home() {
   const [activeFaq, setActiveFaq] = useState(0);
   const [pickup, setPickup] = useState("Semarang Kota");
-  const [date, setDate] = useState("2026-10-08");
+  const [date, setDate] = useState(() => localDate(1));
   const [duration, setDuration] = useState("2 hari");
   const [tab, setTab] = useState("Semua");
   const [calcCar, setCalcCar] = useState("avanza-xenia");
@@ -68,7 +74,7 @@ export default function Home() {
           <div className="booking-panel">
             <div className="booking-title"><span><CarFront size={21} /></span><div><small>Mulai perjalanan</small><strong>Cek ketersediaan mobil</strong></div></div>
             <label><small>Lokasi penjemputan</small><span><MapPin size={17} /><select value={pickup} onChange={(e) => setPickup(e.target.value)}><option>Semarang Kota</option><option>Bandara Ahmad Yani</option><option>Stasiun Tawang</option><option>Luar Kota</option></select></span></label>
-            <label><small>Tanggal mulai</small><span><CalendarDays size={17} /><input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></span></label>
+            <label><small>Tanggal mulai</small><span><CalendarDays size={17} /><input type="date" min={localDate(0)} value={date} onChange={(e) => setDate(e.target.value)} /></span></label>
             <label><small>Durasi sewa</small><span><Clock3 size={17} /><select value={duration} onChange={(e) => setDuration(e.target.value)}><option>1 hari</option><option>2 hari</option><option>3 hari</option><option>1 minggu</option></select></span></label>
             <button className="btn btn-navy search-btn" onClick={bookNow}>Tanya ketersediaan <ArrowRight size={17} /></button>
           </div>

@@ -7,6 +7,7 @@ import { ArrowRight, Eye, EyeOff, Lock, UserRound } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { apiBase, getSession, saveSession } from "@/lib/api";
 
+const showDemo = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_SHOW_DEMO === "1";
 const demoAccounts = [
   { role: "Administrator", username: "admin", password: "Presisi#2026" },
   { role: "Staf operasional", username: "staff", password: "Staff#2026" },
@@ -59,14 +60,14 @@ export default function LoginPage() {
           <label>Password<span className="login-input"><Lock size={17} /><input type={show ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required /><button type="button" onClick={() => setShow(!show)} aria-label={show ? "Sembunyikan password" : "Tampilkan password"}>{show ? <EyeOff size={17} /> : <Eye size={17} />}</button></span></label>
           {error && <div className="form-error" role="alert">{error}</div>}
           <button className="btn btn-navy btn-lg" disabled={loading}>{loading ? "Memeriksa..." : "Masuk"} <ArrowRight size={17} /></button>
-          <div className="demo-box">
+          {showDemo && <div className="demo-box">
             <strong>Akun demo prototype</strong>
             {demoAccounts.map((a) => (
               <button type="button" key={a.username} onClick={() => { setUsername(a.username); setPassword(a.password); }}>
                 <span>{a.role}</span><code>{a.username} / {a.password}</code>
               </button>
             ))}
-          </div>
+          </div>}
           <Link href="/" className="login-back">← Kembali ke website</Link>
         </form>
       </section>

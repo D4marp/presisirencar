@@ -10,11 +10,13 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
+	"unicode/utf8"
 )
 
 type Car struct {
@@ -94,7 +96,7 @@ func seedCars() []Car {
 }
 
 func (s *Store) saveLocked() error {
-	if err := os.MkdirAll(filepath.Dir(s.path), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(s.path), 0700); err != nil {
 		return err
 	}
 	data, err := json.MarshalIndent(s.bookings, "", "  ")
@@ -102,7 +104,7 @@ func (s *Store) saveLocked() error {
 		return err
 	}
 	tmp := s.path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0644); err != nil {
+	if err := os.WriteFile(tmp, data, 0600); err != nil {
 		return err
 	}
 	return os.Rename(tmp, s.path)
@@ -127,18 +129,18 @@ func (s *Store) createBooking(input Booking) (Booking, error) {
 	if !car.Available {
 		return Booking{}, errors.New("kendaraan sedang tidak tersedia")
 	}
-	if strings.TrimSpace(input.CustomerName) == "" || strings.TrimSpace(input.Phone) == "" || input.Duration < 1 || input.StartDate == "" {
-		return Booking{}, errors.New("nama, telepon, tanggal, dan durasi wajib diisi")
-	}
-	if _, err := time.Parse("2006-01-02", input.StartDate); err != nil {
-		return Booking{}, errors.New("format tanggal harus YYYY-MM-DD")
+	input.CustomerName = strings.TrimSpace(input.CustomerName)
+	input.Phone = strings.TrimSpace(input.Phone)
+	input.Email = strings.TrimSpace(input.Email)
+	input.PickupLocation = strings.TrimSpace(input.PickupLocation)
+	input.Notes = strings.TrimSpace(input.Notes)
+	if err := validateBooking(input); err != nil {
+		return Booking{}, err
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	input.ID = fmt.Sprintf("PR-%04d", 1001+len(s.bookings))
-	input.CustomerName = strings.TrimSpace(input.CustomerName)
-	input.Phone = strings.TrimSpace(input.Phone)
+	input.ID = fmt.Sprintf("PR-%04d", s.nextNumberLocked())
 	input.Status = "Menunggu"
 	input.Total = car.Price * input.Duration
 	if input.WithDriver && car.RentalType != "Dengan Sopir" {
@@ -153,9 +155,61 @@ func (s *Store) createBooking(input Booking) (Booking, error) {
 	return input, nil
 }
 
+var wib = func() *time.Location {
+	if loc, err := time.LoadLocation("Asia/Jakarta"); err == nil {
+		return loc
+	}
+	return time.FixedZone("WIB", 7*3600)
+}()
+
+var phonePattern = regexp.MustCompile(`^\+?[0-9][0-9 \-]{6,18}[0-9]$`)
+
+func validateBooking(b Booking) error {
+	switch {
+	case b.CustomerName == "" || b.Phone == "" || b.StartDate == "" || b.PickupLocation == "":
+		return errors.New("nama, telepon, lokasi, tanggal, dan durasi wajib diisi")
+	case utf8.RuneCountInString(b.CustomerName) > 100 || utf8.RuneCountInString(b.PickupLocation) > 200 || utf8.RuneCountInString(b.Notes) > 500 || len(b.Email) > 120:
+		return errors.New("isian terlalu panjang")
+	case !phonePattern.MatchString(b.Phone):
+		return errors.New("nomor telepon tidak valid")
+	case b.Email != "" && !strings.Contains(b.Email, "@"):
+		return errors.New("email tidak valid")
+	case b.Duration < 1 || b.Duration > 30:
+		return errors.New("durasi sewa harus 1 sampai 30 hari")
+	}
+	start, err := time.ParseInLocation("2006-01-02", b.StartDate, wib)
+	if err != nil {
+		return errors.New("format tanggal harus YYYY-MM-DD")
+	}
+	today := time.Now().In(wib).Truncate(24 * time.Hour)
+	y, mo, d := time.Now().In(wib).Date()
+	today = time.Date(y, mo, d, 0, 0, 0, 0, wib)
+	if start.Before(today) {
+		return errors.New("tanggal mulai tidak boleh sudah lewat")
+	}
+	return nil
+}
+
+// nextNumberLocked mengembalikan nomor pesanan berikutnya (maks + 1).
+func (s *Store) nextNumberLocked() int {
+	highest := 1000
+	for _, b := range s.bookings {
+		var n int
+		if _, err := fmt.Sscanf(b.ID, "PR-%d", &n); err == nil && n > highest {
+			highest = n
+		}
+	}
+	return highest + 1
+}
+
 type API struct {
-	store *Store
-	auth  *Auth
+	store    *Store
+	auth     *Auth
+	bookings *limiter
+}
+
+func newAPI(store *Store, auth *Auth) *API {
+	return &API{store: store, auth: auth, bookings: newLimiter(10, 10*time.Minute)}
 }
 
 func (a *API) routes() http.Handler {
@@ -203,12 +257,29 @@ func (a *API) listBookings(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (a *API) createBooking(w http.ResponseWriter, r *http.Request) {
-	var input Booking
-	if err := decodeJSON(r, &input); err != nil {
-		writeError(w, 400, err.Error())
+	ip := clientIP(r)
+	if a.bookings.blocked(ip) {
+		writeError(w, 429, "terlalu banyak permintaan booking, coba lagi nanti atau hubungi kami via WhatsApp")
 		return
 	}
-	booking, err := a.store.createBooking(input)
+	a.bookings.record(ip)
+	// Hanya field yang boleh diisi pelanggan; id, status, dan total dihitung server.
+	var in struct {
+		CustomerName   string `json:"customer_name"`
+		Phone          string `json:"phone"`
+		Email          string `json:"email"`
+		CarSlug        string `json:"car_slug"`
+		PickupLocation string `json:"pickup_location"`
+		StartDate      string `json:"start_date"`
+		Duration       int    `json:"duration"`
+		WithDriver     bool   `json:"with_driver"`
+		Notes          string `json:"notes"`
+	}
+	if err := decodeJSON(r, &in); err != nil {
+		writeError(w, 400, "data booking tidak valid")
+		return
+	}
+	booking, err := a.store.createBooking(Booking{CustomerName: in.CustomerName, Phone: in.Phone, Email: in.Email, CarSlug: in.CarSlug, PickupLocation: in.PickupLocation, StartDate: in.StartDate, Duration: in.Duration, WithDriver: in.WithDriver, Notes: in.Notes})
 	if err != nil {
 		writeError(w, 422, err.Error())
 		return
@@ -299,6 +370,9 @@ func withMiddleware(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Referrer-Policy", "no-referrer")
+		w.Header().Set("Cache-Control", "no-store")
 		start := time.Now()
 		next.ServeHTTP(w, r)
 		slog.Info("request", "method", r.Method, "path", r.URL.Path, "duration_ms", time.Since(start).Milliseconds())
@@ -327,6 +401,19 @@ func env(key, fallback string) string {
 }
 
 func main() {
+	prod := env("APP_ENV", "development") == "production"
+	users := demoUsers()
+	if prod {
+		secret, pass := os.Getenv("AUTH_SECRET"), os.Getenv("ADMIN_PASSWORD")
+		if len(secret) < 32 || len(pass) < 10 {
+			slog.Error("mode production: AUTH_SECRET (min 32 karakter) dan ADMIN_PASSWORD (min 10 karakter) wajib diatur")
+			os.Exit(1)
+		}
+		users = adminUsers()
+		if os.Getenv("SEED_DEMO") == "" {
+			os.Setenv("SEED_DEMO", "0")
+		}
+	}
 	store, err := newStore(env("DATA_FILE", "data/bookings.json"))
 	if err != nil {
 		slog.Error("gagal memulai penyimpanan", "error", err)
@@ -337,7 +424,7 @@ func main() {
 		slog.Error("PORT tidak valid")
 		os.Exit(1)
 	}
-	server := &http.Server{Addr: ":" + port, Handler: (&API{store: store, auth: newAuth(os.Getenv("AUTH_SECRET"))}).routes(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second}
+	server := &http.Server{Addr: ":" + port, Handler: newAPI(store, newAuth(os.Getenv("AUTH_SECRET"), users)).routes(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second}
 
 	go func() {
 		slog.Info("PRESISI Rencar API berjalan", "url", "http://localhost:"+port)

@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -45,29 +46,67 @@ func newUser(username, name, role, password string) User {
 	return User{Username: username, Name: name, Role: role, salt: salt, hash: hashPassword(password, salt)}
 }
 
-func seedUsers() []User {
+func demoUsers() []User {
 	return []User{
 		newUser("admin", "Steven Presisi", "admin", "Presisi#2026"),
 		newUser("staff", "Dewi Operasional", "staff", "Staff#2026"),
 	}
 }
 
+// limiter membatasi N kejadian per jendela waktu untuk setiap kunci (IP).
+type limiter struct {
+	mu     sync.Mutex
+	max    int
+	window time.Duration
+	hits   map[string][]time.Time
+}
+
+func newLimiter(max int, window time.Duration) *limiter {
+	return &limiter{max: max, window: window, hits: map[string][]time.Time{}}
+}
+
+func (l *limiter) prune(key string) []time.Time {
+	recent := l.hits[key][:0]
+	for _, t := range l.hits[key] {
+		if time.Since(t) < l.window {
+			recent = append(recent, t)
+		}
+	}
+	if len(recent) == 0 {
+		delete(l.hits, key)
+		return nil
+	}
+	l.hits[key] = recent
+	return recent
+}
+
+func (l *limiter) blocked(key string) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return len(l.prune(key)) >= l.max
+}
+
+func (l *limiter) record(key string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.prune(key)
+	l.hits[key] = append(l.hits[key], time.Now())
+}
+
 type Auth struct {
 	users  []User
 	secret []byte
-
-	mu       sync.Mutex
-	failures map[string][]time.Time
+	logins *limiter
 }
 
-func newAuth(secret string) *Auth {
+func newAuth(secret string, users []User) *Auth {
 	key := []byte(secret)
 	if len(key) == 0 {
 		key = make([]byte, 32)
 		_, _ = rand.Read(key)
 		slog.Warn("AUTH_SECRET belum diatur; sesi login akan hilang saat server restart")
 	}
-	return &Auth{users: seedUsers(), secret: key, failures: map[string][]time.Time{}}
+	return &Auth{users: users, secret: key, logins: newLimiter(5, 5*time.Minute)}
 }
 
 func (a *Auth) sign(payload string) string {
@@ -106,32 +145,21 @@ func (a *Auth) verify(token string) (User, error) {
 	return User{}, errors.New("pengguna tidak ditemukan")
 }
 
+// TRUST_PROXY=1 jika berjalan di belakang reverse proxy (Railway, Fly, Nginx):
+// pakai alamat terakhir di X-Forwarded-For, yaitu yang ditambahkan proxy tepercaya.
 func clientIP(r *http.Request) string {
+	if env("TRUST_PROXY", "0") == "1" {
+		if parts := strings.Split(r.Header.Get("X-Forwarded-For"), ","); len(parts) > 0 {
+			if ip := strings.TrimSpace(parts[len(parts)-1]); ip != "" {
+				return ip
+			}
+		}
+	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		return r.RemoteAddr
 	}
 	return host
-}
-
-// Maksimal 5 percobaan gagal per IP dalam 5 menit.
-func (a *Auth) blocked(ip string) bool {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	recent := a.failures[ip][:0]
-	for _, t := range a.failures[ip] {
-		if time.Since(t) < 5*time.Minute {
-			recent = append(recent, t)
-		}
-	}
-	a.failures[ip] = recent
-	return len(recent) >= 5
-}
-
-func (a *Auth) recordFailure(ip string) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	a.failures[ip] = append(a.failures[ip], time.Now())
 }
 
 func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
@@ -144,7 +172,7 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ip := clientIP(r)
-	if a.blocked(ip) {
+	if a.logins.blocked(ip) {
 		writeError(w, 429, "terlalu banyak percobaan, coba lagi beberapa menit lagi")
 		return
 	}
@@ -157,7 +185,7 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	a.recordFailure(ip)
+	a.logins.record(ip)
 	writeError(w, 401, "username atau password salah")
 }
 
@@ -188,4 +216,10 @@ func (a *Auth) require(next http.HandlerFunc) http.HandlerFunc {
 		}
 		next(w, r)
 	}
+}
+
+// adminUsers membuat akun produksi dari environment (tanpa akun demo).
+func adminUsers() []User {
+	username := strings.ToLower(env("ADMIN_USERNAME", "admin"))
+	return []User{newUser(username, env("ADMIN_NAME", "Administrator"), "admin", os.Getenv("ADMIN_PASSWORD"))}
 }

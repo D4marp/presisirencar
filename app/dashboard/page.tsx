@@ -125,15 +125,9 @@ export default function Dashboard() {
         <div className="sidebar-brand"><Logo /><button onClick={() => setSidebar(false)}><X /></button></div>
         <nav className="side-nav">
           <small>MENU UTAMA</small>
-          <a className="active" href="#"><LayoutDashboard /> Ikhtisar</a>
+          <a className="active" href="#top"><LayoutDashboard /> Ikhtisar</a>
           <a href="#pesanan"><ClipboardList /> Pesanan <span>{stats.bookings}</span></a>
-          <a href="#"><CarFront /> Armada</a>
-          <a href="#"><Users /> Pelanggan</a>
-          <small>KEUANGAN</small>
-          <a href="#"><WalletCards /> Transaksi</a>
-          <a href="#"><CircleDollarSign /> Laporan</a>
-          <small>PENGATURAN</small>
-          <a href="#"><Settings /> Pengaturan</a>
+          <Link href="/armada"><CarFront /> Lihat armada</Link>
         </nav>
         <div className="support-card"><span>Butuh bantuan?</span><p>Tim support siap membantu operasional Anda.</p><a href="tel:+6281362218168">Hubungi support <ChevronRight size={15} /></a></div>
         <Link href="/" className="back-site">← Kembali ke website</Link>
