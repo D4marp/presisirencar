@@ -10,7 +10,7 @@ Environment wajib (`APP_ENV=production`):
 | --- | --- |
 | `APP_ENV` | `production`. Menonaktifkan akun demo. |
 | `AUTH_SECRET` | Minimal 32 karakter acak. Buat: `openssl rand -hex 32` |
-| `ADMIN_PASSWORD` | Minimal 10 karakter. Password login admin. |
+| `ADMIN_PASSWORD` | Minimal 12 karakter, acak (nilai lemah ditolak server). Password login admin. |
 | `ADMIN_USERNAME` | Opsional, default `admin`. |
 | `ADMIN_NAME` | Opsional, nama tampil di dashboard. |
 | `CORS_ORIGIN` | Domain frontend, mis. `https://presisirencar.com` (pisahkan koma bila lebih dari satu). |

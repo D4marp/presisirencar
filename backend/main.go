@@ -222,6 +222,37 @@ func env(key, fallback string) string {
 	return fallback
 }
 
+// weakSecret menolak secret yang pendek atau masih berupa nilai contoh dari repo/dokumentasi.
+func weakSecret(s string) bool {
+	if len(s) < 32 {
+		return true
+	}
+	lower := strings.ToLower(s)
+	for _, bad := range []string{"ganti", "change-me", "changeme", "contoh", "example", "secret", "password", "presisi"} {
+		if strings.Contains(lower, bad) {
+			return true
+		}
+	}
+	return false
+}
+
+// weakPassword menolak password admin yang pendek, mudah ditebak, atau nilai contoh.
+func weakPassword(p, username string) bool {
+	if len(p) < 12 {
+		return true
+	}
+	lower := strings.ToLower(p)
+	if lower == strings.ToLower(username) {
+		return true
+	}
+	for _, bad := range []string{"ganti", "contoh", "example", "presisi", "rentcar", "rencar", "admin", "password", "12345", "qwerty", "semarang"} {
+		if strings.Contains(lower, bad) {
+			return true
+		}
+	}
+	return false
+}
+
 // dataDir: DATA_DIR, atau (kompatibel dengan konfigurasi lama) folder dari DATA_FILE.
 func dataDir() string {
 	if dir := os.Getenv("DATA_DIR"); dir != "" {
@@ -238,8 +269,12 @@ func main() {
 	users := demoUsers()
 	if prod {
 		secret, pass := os.Getenv("AUTH_SECRET"), os.Getenv("ADMIN_PASSWORD")
-		if len(secret) < 32 || len(pass) < 10 {
-			slog.Error("mode production: AUTH_SECRET (min 32 karakter) dan ADMIN_PASSWORD (min 10 karakter) wajib diatur")
+		if weakSecret(secret) {
+			slog.Error("mode production: AUTH_SECRET wajib acak, minimal 32 karakter, dan bukan nilai contoh (buat dengan: openssl rand -hex 32)")
+			os.Exit(1)
+		}
+		if weakPassword(pass, env("ADMIN_USERNAME", "admin")) {
+			slog.Error("mode production: ADMIN_PASSWORD terlalu lemah (minimal 12 karakter, bukan nama brand/kata umum/nilai contoh)")
 			os.Exit(1)
 		}
 		users = adminUsers()

@@ -152,3 +152,22 @@ func TestLegacyDataFileEnv(t *testing.T) {
 		t.Fatalf("dataDir = %q", got)
 	}
 }
+
+func TestWeakProductionConfigIsRejected(t *testing.T) {
+	for _, s := range []string{"", "pendek", "GANTI_DENGAN_HASIL_openssl_rand_hex_32", "presisi-dev-secret-change-me-xxxxxxxxxxxx", strings.Repeat("a", 31)} {
+		if !weakSecret(s) {
+			t.Errorf("secret %q seharusnya ditolak", s)
+		}
+	}
+	if weakSecret("4257c5065d789511fc325d2735144400003c6c578f80d6d63b9571c17bc870a7") {
+		t.Error("secret acak 64 hex harus diterima")
+	}
+	for _, p := range []string{"", "pendek", "presisirentcar", "Presisi#2026Aman", "GANTI_DENGAN_PASSWORD_KUAT", "passwordpassword1", "admin1234567890", "stev"} {
+		if !weakPassword(p, "stev") {
+			t.Errorf("password %q seharusnya ditolak", p)
+		}
+	}
+	if weakPassword("k7Qm2Xv9LpR4tZ8w", "admin") {
+		t.Error("password acak yang kuat harus diterima")
+	}
+}

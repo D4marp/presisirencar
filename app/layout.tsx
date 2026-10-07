@@ -4,6 +4,7 @@ import "./globals.css";
 import "./visual-refresh.css";
 import "./modern.css";
 import { FloatingWhatsApp } from "@/components/floating-whatsapp";
+import { MAPS_URL } from "@/data/business";
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", display: "swap" });
 
@@ -42,7 +43,7 @@ const businessSchema = {
     postalCode: "50264",
     addressCountry: "ID",
   },
-  hasMap: "https://maps.app.goo.gl/HAZA91Ak9pzMX3GA7",
+  hasMap: MAPS_URL,
   openingHours: "Mo-Su 00:00-23:59",
 };
 
