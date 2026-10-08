@@ -1,11 +1,15 @@
+import { PROD_API_URL } from "@/lib/site";
+
 export type SessionUser = { username: string; name: string; role: string };
 
 const TOKEN_KEY = "presisi_token";
 const USER_KEY = "presisi_user";
 
-// Default mengikuti host halaman, jadi 127.0.0.1 dan localhost sama-sama bekerja.
+// Produksi: api.presisirencar.com (bisa ditimpa NEXT_PUBLIC_API_URL).
+// Pengembangan: mengikuti host halaman, jadi 127.0.0.1 dan localhost sama-sama bekerja.
 export function apiBase() {
   if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  if (process.env.NODE_ENV === "production") return PROD_API_URL;
   if (typeof window !== "undefined") return `http://${window.location.hostname}:8080/api`;
   return "http://127.0.0.1:8080/api";
 }

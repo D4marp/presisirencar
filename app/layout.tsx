@@ -5,10 +5,11 @@ import "./visual-refresh.css";
 import "./modern.css";
 import { FloatingWhatsApp } from "@/components/floating-whatsapp";
 import { MAPS_URL } from "@/data/business";
+import { SITE_URL } from "@/lib/site";
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", display: "swap" });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const siteUrl = SITE_URL;
 const description =
   "Rental mobil aman, nyaman, dan terpercaya di Semarang. Pilihan armada terawat dengan atau tanpa pengemudi.";
 
