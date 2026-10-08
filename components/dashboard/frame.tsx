@@ -41,7 +41,7 @@ export function DashboardFrame({ active, title, subtitle, children }: { active: 
   return (
     <main className="dashboard-shell">
       {notice && <div className="toast" role="status"><span><span className="toast-dot" />{notice}</span><button onClick={() => setNotice("")} aria-label="Tutup"><X size={15} /></button></div>}
-      <DashboardSidebar active={active} open={open} onClose={() => setOpen(false)} />
+      <DashboardSidebar active={active} open={open} onClose={() => setOpen(false)} role={user.role} />
       <section className="dashboard-content">
         <header className="dash-header">
           <button className="dash-menu" onClick={() => setOpen(true)} aria-label="Buka menu"><Menu /></button>

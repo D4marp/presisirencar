@@ -126,6 +126,14 @@ func (a *API) routes() http.Handler {
 	})
 	mux.HandleFunc("POST /api/auth/login", a.auth.login)
 	mux.HandleFunc("GET /api/auth/me", a.auth.me)
+	mux.HandleFunc("POST /api/auth/register", a.auth.register) // wajib kode undangan
+
+	// Kelola pengguna & undangan (admin)
+	mux.HandleFunc("GET /api/users", a.auth.requireRole("admin", a.auth.listUsers))
+	mux.HandleFunc("DELETE /api/users/{username}", a.auth.requireRole("admin", a.auth.deleteUser))
+	mux.HandleFunc("GET /api/invites", a.auth.requireRole("admin", a.auth.listInvites))
+	mux.HandleFunc("POST /api/invites", a.auth.requireRole("admin", a.auth.createInvite))
+	mux.HandleFunc("DELETE /api/invites/{id}", a.auth.requireRole("admin", a.auth.revokeInvite))
 
 	// Publik
 	mux.HandleFunc("GET /api/cars", a.listCars)
@@ -291,7 +299,7 @@ func main() {
 	}
 	// LISTEN_ADDR=127.0.0.1:8080 di VPS agar API hanya bisa dicapai lewat reverse proxy.
 	// Batas waktu 30 detik cukup untuk unggah foto 4 MB di koneksi lambat.
-	server := &http.Server{Addr: env("LISTEN_ADDR", ":"+port), Handler: newAPI(store, newAuth(os.Getenv("AUTH_SECRET"), users)).routes(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second}
+	server := &http.Server{Addr: env("LISTEN_ADDR", ":"+port), Handler: newAPI(store, newAuth(os.Getenv("AUTH_SECRET"), users, dataDir())).routes(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second}
 
 	go func() {
 		slog.Info("PRESISI Rent Car API berjalan", "url", "http://localhost:"+port)

@@ -10,6 +10,9 @@ Pemesanan dilakukan pelanggan lewat WhatsApp, jadi server **tidak menyimpan data
 | --- | --- | --- |
 | `GET /api/health` | publik | status server |
 | `POST /api/auth/login`, `GET /api/auth/me` | publik / login | masuk, cek sesi |
+| `POST /api/auth/register` | publik, **wajib kode undangan** | daftar akun dengan kode sekali pakai (24 jam). Tanpa kode valid tidak ada akun yang terbentuk |
+| `GET/POST /api/invites`, `DELETE /api/invites/{id}` | admin | lihat, buat, dan cabut undangan (peran `staff` atau `admin`) |
+| `GET /api/users`, `DELETE /api/users/{username}` | admin | daftar dan hapus akun (akun utama dari konfigurasi dan akun sendiri tidak bisa dihapus) |
 | `GET /api/cars`, `GET /api/cars/{slug}` | publik | daftar & detail mobil |
 | `GET /api/uploads/{file}` | publik | menyajikan foto mobil yang diunggah |
 | `POST /api/cars` | admin | tambah mobil |
@@ -22,7 +25,7 @@ Setiap perubahan data dicatat di log sebagai `audit` (pengguna, aksi, target).
 
 ## Penyimpanan
 
-Satu folder (`DATA_DIR`, default `data/`): `cars.json` (dibuat dari data awal saat start pertama) dan `uploads/` (foto). Bisa dipindah dengan `CARS_FILE` dan `UPLOAD_DIR`. `DATA_FILE` dari konfigurasi lama masih dikenali (dipakai folder-nya).
+Satu folder (`DATA_DIR`, default `data/`): `cars.json` (dibuat dari data awal saat start pertama), `uploads/` (foto), `users.json` (akun hasil pendaftaran undangan; password disimpan sebagai hash PBKDF2-SHA256 600.000 iterasi dengan salt acak per akun), dan `invites.json` (hash kode undangan, bukan kodenya). Bisa dipindah dengan `CARS_FILE` dan `UPLOAD_DIR`. `DATA_FILE` dari konfigurasi lama masih dikenali (dipakai folder-nya).
 
 ## Menjalankan lokal
 
@@ -145,4 +148,4 @@ Di frontend set saat build: `NEXT_PUBLIC_API_URL=https://api.contoh.com/api`. `C
 
 ## Batasan
 
-Penyimpanan berupa file JSON dan folder foto (cukup untuk katalog puluhan mobil di satu server). Satu akun admin dari environment. Token login berlaku 12 jam dan disimpan di `localStorage` frontend.
+Penyimpanan berupa file JSON dan folder foto (cukup untuk katalog puluhan mobil di satu server). Satu akun utama dari environment; akun lain dibuat lewat undangan di dashboard (menu Pengguna, khusus admin). Token login berlaku 12 jam dan disimpan di `localStorage` frontend.

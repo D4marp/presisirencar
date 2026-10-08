@@ -14,44 +14,87 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 )
 
-// Akun demo untuk prototype. Ganti sebelum produksi (lihat README).
+// hashRounds: jumlah iterasi PBKDF2-HMAC-SHA256 (rekomendasi OWASP untuk SHA-256: 600.000).
+// Variabel (bukan konstanta) agar tes dapat menurunkannya supaya cepat.
+var hashRounds = 600000
+
+// pbkdf2SHA256 mengimplementasikan PBKDF2 (RFC 8018) dengan HMAC-SHA256 memakai library standar,
+// diverifikasi terhadap vektor uji baku di tes.
+func pbkdf2SHA256(password, salt []byte, iter, keyLen int) []byte {
+	prf := hmac.New(sha256.New, password)
+	hLen := prf.Size()
+	blocks := (keyLen + hLen - 1) / hLen
+	dk := make([]byte, 0, blocks*hLen)
+	u := make([]byte, hLen)
+	for block := 1; block <= blocks; block++ {
+		prf.Reset()
+		prf.Write(salt)
+		prf.Write([]byte{byte(block >> 24), byte(block >> 16), byte(block >> 8), byte(block)})
+		dk = prf.Sum(dk)
+		t := dk[len(dk)-hLen:]
+		copy(u, t)
+		for n := 2; n <= iter; n++ {
+			prf.Reset()
+			prf.Write(u)
+			u = prf.Sum(u[:0])
+			for x := range u {
+				t[x] ^= u[x]
+			}
+		}
+	}
+	return dk[:keyLen]
+}
+
+func hashPassword(password, salt string) string {
+	return hex.EncodeToString(pbkdf2SHA256([]byte(password), []byte(salt), hashRounds, 32))
+}
+
+func randomHex(n int) string {
+	b := make([]byte, n)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
+// User adalah akun yang dapat masuk ke dashboard. salt/hash tidak pernah dikirim ke klien.
 type User struct {
 	Username string `json:"username"`
 	Name     string `json:"name"`
 	Role     string `json:"role"`
 	salt     string
 	hash     string
-}
-
-const hashRounds = 20000
-
-// hashPassword: HMAC-SHA256 berulang dengan salt. Cukup untuk prototype;
-// untuk produksi gunakan bcrypt/argon2.
-func hashPassword(password, salt string) string {
-	sum := []byte(password)
-	for i := 0; i < hashRounds; i++ {
-		m := hmac.New(sha256.New, []byte(salt))
-		m.Write(sum)
-		sum = m.Sum(nil)
-	}
-	return hex.EncodeToString(sum)
+	root     bool // akun dari environment: tidak bisa dihapus lewat dashboard
+	created  time.Time
 }
 
 func newUser(username, name, role, password string) User {
-	salt := "presisi-" + username
-	return User{Username: username, Name: name, Role: role, salt: salt, hash: hashPassword(password, salt)}
+	salt := randomHex(16)
+	return User{Username: username, Name: name, Role: role, salt: salt, hash: hashPassword(password, salt), created: time.Now()}
 }
 
+func newRootUser(username, name, role, password string) User {
+	u := newUser(username, name, role, password)
+	u.root = true
+	return u
+}
+
+// Akun demo: hanya dipakai di mode development.
 func demoUsers() []User {
 	return []User{
-		newUser("admin", "Steven Presisi", "admin", "Presisi#2026"),
-		newUser("staff", "Dewi Operasional", "staff", "Staff#2026"),
+		newRootUser("admin", "Steven Presisi", "admin", "Presisi#2026"),
+		newRootUser("staff", "Dewi Operasional", "staff", "Staff#2026"),
 	}
+}
+
+// adminUsers membuat akun produksi dari environment (tanpa akun demo).
+func adminUsers() []User {
+	username := strings.ToLower(env("ADMIN_USERNAME", "admin"))
+	return []User{newRootUser(username, env("ADMIN_NAME", "Administrator"), "admin", os.Getenv("ADMIN_PASSWORD"))}
 }
 
 // limiter membatasi N kejadian per jendela waktu untuk setiap kunci (IP).
@@ -94,20 +137,91 @@ func (l *limiter) record(key string) {
 	l.hits[key] = append(l.hits[key], time.Now())
 }
 
-type Auth struct {
-	users  []User
-	secret []byte
-	logins *limiter
+// storedUser adalah bentuk akun (non-root) yang disimpan di users.json.
+type storedUser struct {
+	Username  string    `json:"username"`
+	Name      string    `json:"name"`
+	Role      string    `json:"role"`
+	Salt      string    `json:"salt"`
+	Hash      string    `json:"hash"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
-func newAuth(secret string, users []User) *Auth {
+type Auth struct {
+	secret  []byte
+	logins  *limiter
+	signups *limiter
+	dir     string
+
+	mu      sync.RWMutex
+	users   []User
+	invites []invite
+}
+
+// newAuth membuat pengelola login. root = akun dari environment/demo; akun tambahan (hasil
+// pendaftaran dengan undangan) dan undangan dimuat dari folder data.
+func newAuth(secret string, root []User, dir string) *Auth {
 	key := []byte(secret)
 	if len(key) == 0 {
 		key = make([]byte, 32)
 		_, _ = rand.Read(key)
 		slog.Warn("AUTH_SECRET belum diatur; sesi login akan hilang saat server restart")
 	}
-	return &Auth{users: users, secret: key, logins: newLimiter(5, 5*time.Minute)}
+	a := &Auth{secret: key, logins: newLimiter(5, 5*time.Minute), signups: newLimiter(10, 15*time.Minute), dir: dir, users: append([]User{}, root...)}
+	if dir != "" {
+		a.loadStored()
+	}
+	return a
+}
+
+func (a *Auth) usersPath() string   { return filepath.Join(a.dir, "users.json") }
+func (a *Auth) invitesPath() string { return filepath.Join(a.dir, "invites.json") }
+
+func (a *Auth) loadStored() {
+	if data, err := os.ReadFile(a.usersPath()); err == nil {
+		var list []storedUser
+		if json.Unmarshal(data, &list) == nil {
+			for _, s := range list {
+				if _, exists := a.findLocked(s.Username); exists {
+					continue // akun root dengan nama sama menang
+				}
+				a.users = append(a.users, User{Username: s.Username, Name: s.Name, Role: s.Role, salt: s.Salt, hash: s.Hash, created: s.CreatedAt})
+			}
+		} else {
+			slog.Error("users.json rusak, akun tambahan tidak dimuat")
+		}
+	}
+	if data, err := os.ReadFile(a.invitesPath()); err == nil {
+		_ = json.Unmarshal(data, &a.invites)
+	}
+	a.purgeInvitesLocked()
+}
+
+func (a *Auth) saveUsersLocked() error {
+	list := []storedUser{}
+	for _, u := range a.users {
+		if !u.root {
+			list = append(list, storedUser{Username: u.Username, Name: u.Name, Role: u.Role, Salt: u.salt, Hash: u.hash, CreatedAt: u.created})
+		}
+	}
+	return writeFileAtomic(a.usersPath(), list)
+}
+
+func (a *Auth) saveInvitesLocked() error { return writeFileAtomic(a.invitesPath(), a.invites) }
+
+func (a *Auth) findLocked(username string) (User, bool) {
+	for _, u := range a.users {
+		if u.Username == username {
+			return u, true
+		}
+	}
+	return User{}, false
+}
+
+func (a *Auth) findUser(username string) (User, bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.findLocked(username)
 }
 
 func (a *Auth) sign(payload string) string {
@@ -122,6 +236,8 @@ func (a *Auth) issue(u User, ttl time.Duration) string {
 	return payload + "." + a.sign(payload)
 }
 
+// verify memeriksa tanda tangan, masa berlaku, dan bahwa akunnya masih ada
+// (akun yang dihapus otomatis kehilangan semua token lamanya).
 func (a *Auth) verify(token string) (User, error) {
 	payload, sig, ok := strings.Cut(token, ".")
 	if !ok || subtle.ConstantTimeCompare([]byte(sig), []byte(a.sign(payload))) != 1 {
@@ -138,10 +254,8 @@ func (a *Auth) verify(token string) (User, error) {
 	if json.Unmarshal(raw, &claims) != nil || time.Now().Unix() > claims.Exp {
 		return User{}, errors.New("sesi berakhir")
 	}
-	for _, u := range a.users {
-		if u.Username == claims.U {
-			return u, nil
-		}
+	if u, ok := a.findUser(claims.U); ok {
+		return u, nil
 	}
 	return User{}, errors.New("pengguna tidak ditemukan")
 }
@@ -177,14 +291,21 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 429, "terlalu banyak percobaan, coba lagi beberapa menit lagi")
 		return
 	}
+	if len(in.Password) > 256 {
+		writeError(w, 401, "username atau password salah")
+		return
+	}
 	username := strings.ToLower(strings.TrimSpace(in.Username))
-	for _, u := range a.users {
-		// Hash dihitung untuk setiap akun agar waktu respons tidak membocorkan username.
-		candidate := hashPassword(in.Password, u.salt)
-		if u.Username == username && subtle.ConstantTimeCompare([]byte(candidate), []byte(u.hash)) == 1 {
-			writeJSON(w, 200, map[string]any{"token": a.issue(u, 12*time.Hour), "user": u})
-			return
-		}
+	u, found := a.findUser(username)
+	salt, want := "tidak-ada", ""
+	if found {
+		salt, want = u.salt, u.hash
+	}
+	// Hash selalu dihitung (juga untuk username yang tidak ada) agar waktu respons tidak membocorkan username.
+	candidate := hashPassword(in.Password, salt)
+	if found && subtle.ConstantTimeCompare([]byte(candidate), []byte(want)) == 1 {
+		writeJSON(w, 200, map[string]any{"token": a.issue(u, 12*time.Hour), "user": u})
+		return
 	}
 	a.logins.record(ip)
 	writeError(w, 401, "username atau password salah")
@@ -237,10 +358,4 @@ func (a *Auth) requireRole(role string, next http.HandlerFunc) http.HandlerFunc 
 		}
 		next(w, r)
 	})
-}
-
-// adminUsers membuat akun produksi dari environment (tanpa akun demo).
-func adminUsers() []User {
-	username := strings.ToLower(env("ADMIN_USERNAME", "admin"))
-	return []User{newUser(username, env("ADMIN_NAME", "Administrator"), "admin", os.Getenv("ADMIN_PASSWORD"))}
 }

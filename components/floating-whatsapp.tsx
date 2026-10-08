@@ -12,7 +12,7 @@ export function FloatingWhatsApp() {
   const { cars } = useCars();
   const prices = cars.filter((c) => c.available).map((c) => c.price);
   const minPrice = prices.length ? Math.min(...prices) : 0;
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/login")) return null;
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/login") || pathname.startsWith("/daftar")) return null;
   const href = waLink("Halo PRESISI Rent Car, saya ingin tanya sewa mobil.");
 
   return (

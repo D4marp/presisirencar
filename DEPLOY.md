@@ -54,7 +54,7 @@ Beranda sengaja **tidak** menampilkan klaim yang belum terbukti. Isi file ini de
 ## 4. Batasan yang diketahui (prototype → produksi)
 
 - Penyimpanan berupa **file JSON dan folder foto**, cukup untuk katalog puluhan mobil di satu server.
-- Hanya ada satu akun admin dari environment. Belum ada manajemen pengguna.
+- Akun utama berasal dari environment. Admin menambah akun lain lewat **undangan** di dashboard (menu Pengguna): kode sekali pakai berlaku 24 jam, dan pendaftaran hanya di `/daftar` (tidak ditautkan dari mana pun, tidak diindeks). Tidak ada pendaftaran terbuka.
 - Token login disimpan di `localStorage` (berlaku 12 jam). Untuk keamanan lebih tinggi gunakan cookie `HttpOnly`.
 - Harga dan status mobil diubah lewat dashboard (tanpa deploy). `data/cars.ts` di frontend hanya data cadangan saat API tidak terjangkau.
 - Pemesanan lewat WhatsApp; website tidak menyimpan data pelanggan.

@@ -10,13 +10,16 @@ import (
 	"time"
 )
 
+func init() { hashRounds = 1000 } // tes tidak perlu 600.000 iterasi
+
 func testServer(t *testing.T) (*httptest.Server, *Store) {
 	t.Helper()
-	store, err := newStore(t.TempDir())
+	dir := t.TempDir()
+	store, err := newStore(dir)
 	if err != nil {
 		t.Fatal(err)
 	}
-	server := httptest.NewServer(newAPI(store, newAuth("test-secret", demoUsers())).routes())
+	server := httptest.NewServer(newAPI(store, newAuth("test-secret", demoUsers(), dir)).routes())
 	t.Cleanup(server.Close)
 	return server, store
 }
@@ -79,11 +82,11 @@ func TestMutationsRequireLogin(t *testing.T) {
 }
 
 func TestExpiredAndTamperedTokens(t *testing.T) {
-	a := newAuth("secret-a", demoUsers())
+	a := newAuth("secret-a", demoUsers(), "")
 	if _, err := a.verify(a.issue(a.users[0], -time.Minute)); err == nil {
 		t.Fatal("token kedaluwarsa harus ditolak")
 	}
-	if _, err := a.verify(newAuth("secret-b", demoUsers()).issue(a.users[0], time.Hour)); err == nil {
+	if _, err := a.verify(newAuth("secret-b", demoUsers(), "").issue(a.users[0], time.Hour)); err == nil {
 		t.Fatal("token dengan secret lain harus ditolak")
 	}
 	if _, err := a.verify(a.issue(a.users[0], time.Hour)); err != nil {
@@ -122,7 +125,7 @@ func TestProductionUsersHaveNoDemoAccounts(t *testing.T) {
 	if len(users) != 1 || users[0].Role != "admin" {
 		t.Fatalf("users = %+v", users)
 	}
-	a := newAuth("x", users)
+	a := newAuth("x", users, "")
 	if len(a.users) != 1 || hashPassword("Presisi#2026", a.users[0].salt) == a.users[0].hash {
 		t.Fatal("password demo tidak boleh berlaku di produksi")
 	}

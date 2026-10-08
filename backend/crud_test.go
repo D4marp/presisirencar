@@ -129,7 +129,7 @@ func TestCarsPersistAcrossRestart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	server := httptest.NewServer(newAPI(store, newAuth("s", demoUsers())).routes())
+	server := httptest.NewServer(newAPI(store, newAuth("s", demoUsers(), dir)).routes())
 	_, admin := login(t, server.URL, "admin", "Presisi#2026")
 	if code, _ := call(t, "POST", server.URL+"/api/cars", admin, newCar); code != 201 {
 		t.Fatalf("create = %d", code)
