@@ -8,9 +8,13 @@ export const MAPS_URL = "https://www.google.com/maps/place/Presisi+Rent+Car/@-7.
 export const MAPS_EMBED_URL = "https://www.google.com/maps?q=-7.0642941%2C110.4161471&z=17&output=embed";
 export const ADDRESS = "Jl. Sukun I No.46, Srondol Wetan, Banyumanik, Semarang 50264";
 
-// Video latar hero (opsional). Taruh file di public/, mis. "/hero.mp4" (MP4 H.264, 1080p,
-// tanpa suara, 5-10 detik loop, idealnya < 8 MB). null = pakai foto /hero-presisi.jpg.
-export const HERO_VIDEO: string | null = null;
+// Video latar hero (opsional): MP4 H.264, tanpa suara, loop, idealnya < 5 MB. null = pakai foto.
+// Saat ini: "Point of View of a Car Driving on a Road" oleh Caner Cevirgen (Pexels, lisensi gratis
+// untuk komersial; pembuat meminta kredit, ditampilkan di footer). Dipadatkan jadi loop 12 detik, 720p.
+export const HERO_VIDEO: string | null = "/hero.mp4";
+// Bingkai pertama video: dasar tampilan sebelum video siap, dan cadangan bila video gagal/dimatikan.
+export const HERO_POSTER = "/hero-poster.jpg";
+export const HERO_VIDEO_CREDIT: { text: string; href: string } | null = { text: "Video latar: Caner Cevirgen / Pexels", href: "https://www.pexels.com/video/point-of-view-of-a-car-driving-on-a-road-11367262/" };
 
 // Harus sama dengan biaya pengemudi di backend (backend/main.go).
 export const DRIVER_FEE_PER_DAY = 250000;

@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, MessageCircle, ShieldCheck } from "lucide-react";
-import { HERO_VIDEO } from "@/data/business";
+import { HERO_POSTER, HERO_VIDEO } from "@/data/business";
 import { waLink, type Mode } from "@/lib/rental";
 
 // Pilihan jenis sewa dan tipe mobil di daftar armada.
@@ -14,30 +14,44 @@ export type Search = { mode: Mode; type: string };
 function HeroBackdrop() {
   const [playVideo, setPlayVideo] = useState(false);
   const [ready, setReady] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (!HERO_VIDEO) return;
-    setPlayVideo(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Hemat data: lewati video untuk mode "Data Saver" atau koneksi 2G/3G.
+    const net = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    const slow = !!net && (net.saveData === true || ["slow-2g", "2g", "3g"].includes(net.effectiveType ?? ""));
+    setPlayVideo(!reduceMotion && !slow);
   }, []);
+
+  // Video bisa sudah siap sebelum pendengar peristiwa terpasang (mis. dari cache): periksa langsung.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (playVideo && v && v.readyState >= 3) setReady(true);
+  }, [playVideo]);
 
   return (
     <div className="absolute inset-0 -z-10" aria-hidden>
-      <Image src="/hero-presisi.jpg" alt="" fill priority sizes="100vw" className={`object-cover object-[72%_center] ${playVideo && ready ? "" : "hero-bg-zoom"}`} />
+      <Image src={HERO_VIDEO ? HERO_POSTER : "/hero-presisi.jpg"} alt="" fill priority sizes="100vw" className={`object-cover object-center ${playVideo && ready ? "" : "hero-bg-zoom"}`} />
       {HERO_VIDEO && playVideo && (
         <video
-          className={`absolute inset-0 size-full object-cover object-[70%_center] transition-opacity duration-1000 ${ready ? "opacity-100" : "opacity-0"}`}
+          ref={videoRef}
+          className={`absolute inset-0 size-full object-cover object-center transition-opacity duration-1000 ${ready ? "opacity-100" : "opacity-0"}`}
           src={HERO_VIDEO}
-          poster="/hero-presisi.jpg"
+          poster={HERO_POSTER}
           autoPlay
           muted
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           onCanPlay={() => setReady(true)}
+          onLoadedData={() => setReady(true)}
+          onPlaying={() => setReady(true)}
           onError={() => setPlayVideo(false)}
         />
       )}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/55 to-slate-950/10 max-lg:bg-slate-950/65" />
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/55 to-slate-950/10 max-lg:bg-gradient-to-b max-lg:from-slate-950/80 max-lg:via-slate-950/45 max-lg:to-slate-950/50" />
       <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/40 to-transparent" />
     </div>
   );
