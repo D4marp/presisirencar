@@ -10,22 +10,19 @@ import { TrustBar } from "@/components/home/trust-bar";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { useCars } from "@/lib/cars-api";
-import { localDate } from "@/lib/rental";
 
 export default function Home() {
   const { cars } = useCars();
-  const [search, setSearch] = useState<Search>(() => ({ mode: "Lepas Kunci", type: "Semua tipe", date: localDate(1), days: 2 }));
-
-  const showFleet = () => document.getElementById("armada")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const [search, setSearch] = useState<Search>({ mode: "Lepas Kunci", type: "Semua tipe" });
 
   return (
     <>
       <SiteHeader />
       <main className="bg-white">
-        <Hero search={search} onChange={setSearch} onSearch={showFleet} />
+        <Hero />
         <TrustBar />
         <Fleet cars={cars} search={search} onChange={setSearch} />
-        <Estimator cars={cars} search={search} />
+        <Estimator cars={cars} />
         <Reviews />
         <Steps />
         <Faq />

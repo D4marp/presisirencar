@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Fuel, MessageCircle, Settings2, Users } from "lucide-react";
 import type { Car } from "@/data/cars";
 import { carImage } from "@/lib/images";
-import { dailyPrice, formatDate, rp, typeGroups, waLink, type Mode } from "@/lib/rental";
+import { dailyPrice, rp, typeGroups, waLink, type Mode } from "@/lib/rental";
 import type { Search } from "./hero";
 
 export function Fleet({ cars, search, onChange }: { cars: Car[]; search: Search; onChange: (next: Search) => void }) {
@@ -18,7 +18,7 @@ export function Fleet({ cars, search, onChange }: { cars: Car[]; search: Search;
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">Pilih armada Anda</h2>
             <p className="mt-2 max-w-xl text-slate-600">
               Harga per 24 jam untuk <strong className="font-semibold text-slate-900">{search.mode}</strong>
-              {search.mode === "Dengan Driver" ? " (sudah termasuk driver)" : ""}. Periode: {formatDate(search.date)}, {search.days} hari.
+              {search.mode === "Dengan Driver" ? " (sudah termasuk driver)" : ""}.
             </p>
           </div>
           <div className="inline-grid grid-cols-2 rounded-xl bg-slate-100 p-1 text-sm" role="tablist" aria-label="Jenis sewa">
@@ -38,7 +38,7 @@ export function Fleet({ cars, search, onChange }: { cars: Car[]; search: Search;
           {list.map((car) => {
             const price = dailyPrice(car, search.mode);
             const includesDriver = car.rentalType === "Dengan Sopir";
-            const message = `Halo PRESISI Rent Car, saya ingin sewa ${car.name} (${search.mode}) mulai ${formatDate(search.date)} selama ${search.days} hari. Mohon info ketersediaan dan total biayanya.`;
+            const message = `Halo PRESISI Rent Car, saya ingin sewa ${car.name} (${search.mode}) . Mohon info ketersediaan dan total biayanya.`;
             return (
               <li key={car.slug} className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
                 <Link href={`/armada/${car.slug}`} className="relative block aspect-[4/3] bg-slate-100">
@@ -63,10 +63,10 @@ export function Fleet({ cars, search, onChange }: { cars: Car[]; search: Search;
                       <p className="text-2xl font-extrabold tracking-tight text-slate-900">{rp(price)}</p>
                       <p className="text-xs text-slate-500">/ 24 jam{search.mode === "Dengan Driver" && !includesDriver ? " · termasuk driver" : ""}</p>
                     </div>
-                    <p className="text-right text-xs text-slate-500">{search.days} hari<br /><span className="font-bold text-slate-800">{rp(price * search.days)}</span></p>
+                    
                   </div>
                   <a
-                    href={car.available ? waLink(message) : waLink(`Halo PRESISI Rent Car, apakah ${car.name} bisa dijadwalkan mulai ${formatDate(search.date)}?`)}
+                    href={car.available ? waLink(message) : waLink(`Halo PRESISI Rent Car, apakah ${car.name} bisa dijadwalkan? Mohon info tanggal yang tersedia.`)}
                     target="_blank"
                     rel="noreferrer"
                     className="mt-4 flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-700 text-sm font-bold text-white transition-colors hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-800"

@@ -4,10 +4,9 @@ import { MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { DRIVER_FEE_PER_DAY, deliveryOptions } from "@/data/business";
 import type { Car } from "@/data/cars";
-import { formatDate, rp, waLink, type Mode } from "@/lib/rental";
-import type { Search } from "./hero";
+import { rp, waLink, type Mode } from "@/lib/rental";
 
-export function Estimator({ cars, search }: { cars: Car[]; search: Search }) {
+export function Estimator({ cars }: { cars: Car[] }) {
   const available = cars.filter((c) => c.available);
   const [slug, setSlug] = useState("avanza-xenia");
   const [days, setDays] = useState(3);
@@ -23,7 +22,7 @@ export function Estimator({ cars, search }: { cars: Car[]; search: Search }) {
   const fee = place.fee ?? 0;
   const total = base + driver + fee;
 
-  const message = `Halo PRESISI Rent Car, saya minta price quote: ${car.name} (${driverIncluded ? "Dengan Sopir" : mode}), ${days} hari mulai ${formatDate(search.date)}, serah terima: ${place.label}. Estimasi ${rp(total)}${place.fee === null ? " (belum termasuk biaya antar)" : ""}.`;
+  const message = `Halo PRESISI Rent Car, saya minta price quote: ${car.name} (${driverIncluded ? "Dengan Sopir" : mode}), ${days} hari, serah terima: ${place.label}. Estimasi ${rp(total)}${place.fee === null ? " (belum termasuk biaya antar)" : ""}.`;
 
   return (
     <section id="estimasi" className="scroll-mt-24 border-y border-slate-200 bg-slate-50 py-14 md:py-20">
