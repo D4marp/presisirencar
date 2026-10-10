@@ -302,7 +302,7 @@ func main() {
 	server := &http.Server{Addr: env("LISTEN_ADDR", ":"+port), Handler: newAPI(store, newAuth(os.Getenv("AUTH_SECRET"), users, dataDir())).routes(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second}
 
 	go func() {
-		slog.Info("PRESISI Rent Car API berjalan", "url", "http://localhost:"+port)
+		slog.Info("NaKay Trans API berjalan", "url", "http://localhost:"+port)
 		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			slog.Error("server berhenti", "error", err)
 			os.Exit(1)

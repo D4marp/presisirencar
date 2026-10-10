@@ -13,7 +13,7 @@ export function FloatingWhatsApp() {
   const prices = cars.filter((c) => c.available).map((c) => c.price);
   const minPrice = prices.length ? Math.min(...prices) : 0;
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/login") || pathname.startsWith("/daftar")) return null;
-  const href = waLink("Halo PRESISI Rent Car, saya ingin tanya sewa mobil.");
+  const href = waLink("Halo NaKay Trans, saya ingin tanya sewa mobil.");
 
   return (
     <>
@@ -33,7 +33,7 @@ export function FloatingWhatsApp() {
           <MessageCircle className="size-5" aria-hidden /> Chat CS / Booking
         </a>
       </div>
-      <a href={href} target="_blank" rel="noreferrer" aria-label="Chat PRESISI Rent Car melalui WhatsApp" className="fixed bottom-6 right-6 z-50 hidden h-14 items-center gap-2 rounded-full bg-emerald-700 px-5 text-sm font-bold text-white shadow-lg transition-colors hover:bg-emerald-800 md:inline-flex">
+      <a href={href} target="_blank" rel="noreferrer" aria-label="Chat NaKay Trans melalui WhatsApp" className="fixed bottom-6 right-6 z-50 hidden h-14 items-center gap-2 rounded-full bg-emerald-700 px-5 text-sm font-bold text-white shadow-lg transition-colors hover:bg-emerald-800 md:inline-flex">
         <MessageCircle className="size-5" aria-hidden /> Chat sekarang
       </a>
     </>

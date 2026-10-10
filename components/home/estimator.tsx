@@ -22,7 +22,7 @@ export function Estimator({ cars }: { cars: Car[] }) {
   const fee = place.fee ?? 0;
   const total = base + driver + fee;
 
-  const message = `Halo PRESISI Rent Car, saya minta price quote: ${car.name} (${driverIncluded ? "Dengan Sopir" : mode}), ${days} hari, serah terima: ${place.label}. Estimasi ${rp(total)}${place.fee === null ? " (belum termasuk biaya antar)" : ""}.`;
+  const message = `Halo NaKay Trans, saya minta price quote: ${car.name} (${driverIncluded ? "Dengan Sopir" : mode}), ${days} hari, serah terima: ${place.label}. Estimasi ${rp(total)}${place.fee === null ? " (belum termasuk biaya antar)" : ""}.`;
 
   return (
     <section id="estimasi" className="scroll-mt-24 border-y border-slate-200 bg-slate-50 py-14 md:py-20">

@@ -10,7 +10,7 @@ export function DashboardSidebar({ active, open, onClose, role }: { active: Dash
   return (
     <>
       <aside className={`sidebar ${open ? "open" : ""}`}>
-        <div className="sidebar-brand"><Logo /><button onClick={onClose} aria-label="Tutup menu"><X /></button></div>
+        <div className="sidebar-brand"><Logo variant="wordmark" /><button onClick={onClose} aria-label="Tutup menu"><X /></button></div>
         <nav className="side-nav">
           <small>MENU</small>
           <Link className={active === "armada" ? "active" : ""} href="/dashboard" onClick={onClose}><CarFront /> Armada</Link>

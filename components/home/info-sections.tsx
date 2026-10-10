@@ -69,7 +69,7 @@ export function FinalCta() {
             <h2 className="text-2xl font-extrabold tracking-tight text-white md:text-3xl">Ceritakan rencana perjalanan Anda.</h2>
             <p className="mt-2 max-w-lg text-slate-300">Kami bantu pilihkan mobil dan paket yang paling sesuai, tanpa biaya tersembunyi.</p>
           </div>
-          <a href={waLink("Halo PRESISI Rent Car, saya ingin konsultasi sewa mobil.")} target="_blank" rel="noreferrer" className="inline-flex h-14 shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 text-base font-extrabold text-slate-900 transition-colors hover:bg-amber-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+          <a href={waLink("Halo NaKay Trans, saya ingin konsultasi sewa mobil.")} target="_blank" rel="noreferrer" className="inline-flex h-14 shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 text-base font-extrabold text-slate-900 transition-colors hover:bg-amber-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
             <MessageCircle className="size-5" aria-hidden /> Chat CS via WhatsApp
           </a>
         </div>

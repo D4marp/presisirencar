@@ -1,4 +1,4 @@
-# PRESISI Rent Car
+# NaKay Trans
 
 Website rental mobil menggunakan Next.js, Tailwind CSS, dan backend Go ringan tanpa framework. Pemesanan lewat WhatsApp; dashboard admin hanya untuk mengelola mobil (tambah, ubah, hapus, foto, ketersediaan).
 

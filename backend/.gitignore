@@ -2,3 +2,4 @@ data/
 presisi-api
 .env
 /backend
+.DS_Store

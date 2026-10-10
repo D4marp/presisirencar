@@ -4,26 +4,26 @@ import "./globals.css";
 import "./visual-refresh.css";
 import "./modern.css";
 import { FloatingWhatsApp } from "@/components/floating-whatsapp";
-import { MAPS_URL } from "@/data/business";
+import { BRAND_NAME, BRAND_TAGLINE, MAPS_URL } from "@/data/business";
 import { SITE_URL } from "@/lib/site";
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", display: "swap" });
 
 const siteUrl = SITE_URL;
 const description =
-  "Rental mobil aman, nyaman, dan terpercaya di Semarang. Pilihan armada terawat dengan atau tanpa pengemudi.";
+  `${BRAND_NAME}: transportasi, rental mobil, dan tour & travel di Semarang. Armada terawat dengan atau tanpa pengemudi.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: "PRESISI Rent Car — Rental Mobil Semarang", template: "%s | PRESISI Rent Car" },
+  title: { default: `${BRAND_NAME} — Rental Mobil & Travel Semarang`, template: `%s | ${BRAND_NAME}` },
   description,
   openGraph: {
     type: "website",
     locale: "id_ID",
-    siteName: "PRESISI Rent Car",
-    title: "PRESISI Rent Car — Rental Mobil Semarang",
+    siteName: BRAND_NAME,
+    title: `${BRAND_NAME} — Rental Mobil & Travel Semarang`,
     description,
-    images: [{ url: "/hero-presisi.jpg", width: 1600, height: 900, alt: "Armada PRESISI Rent Car di Semarang" }],
+    images: [{ url: "/hero-presisi.jpg", width: 1600, height: 900, alt: `Armada ${BRAND_NAME} di Semarang` }],
   },
   twitter: { card: "summary_large_image" },
 };
@@ -31,11 +31,13 @@ export const metadata: Metadata = {
 const businessSchema = {
   "@context": "https://schema.org",
   "@type": "AutoRental",
-  name: "PRESISI Rent Car",
+  name: BRAND_NAME,
+  slogan: BRAND_TAGLINE,
   description,
   url: siteUrl,
   telephone: "+6281362218168",
-  image: `${siteUrl}/logo.jpeg`,
+  logo: `${siteUrl}/logo-nakay.webp`,
+  image: `${siteUrl}/logo-nakay.webp`,
   address: {
     "@type": "PostalAddress",
     streetAddress: "Jl. Sukun I No.46, Srondol Wetan, Banyumanik",

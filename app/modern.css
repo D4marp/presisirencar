@@ -25,8 +25,14 @@ h1, h2, h3, h4, .btn, button, input, select, textarea { font-family: inherit; }
 .site-header, .site-header.solid { position: sticky; top: 0; z-index: 60; height: 84px; background: #fff; border-bottom: 1px solid var(--line); transition: box-shadow .3s var(--ease), height .3s var(--ease); }
 .site-header.scrolled { height: 72px; box-shadow: 0 10px 30px rgba(10, 26, 60, .09); border-bottom-color: transparent; }
 .site-header-inner { height: 100%; gap: 28px; }
-.site-header .logo-image { width: 64px; height: 64px; border: 0; transition: width .3s var(--ease), height .3s var(--ease); }
-.site-header.scrolled .logo-image { width: 50px; height: 50px; }
+.logo-image { display: block; width: auto; max-width: none; object-fit: contain; background: transparent; border: 0; }
+.logo-image.wordmark { height: 48px; }
+.logo-image.full { height: 120px; }
+.site-header .logo-image.wordmark { height: 50px; transition: height .3s var(--ease); }
+.site-header.scrolled .logo-image.wordmark { height: 42px; }
+.sidebar .logo-image.wordmark { height: 44px; }
+.footer-brand .logo-image.full { height: 132px; }
+.login-card .logo-image.full { height: 110px; }
 .site-desktop-nav { margin: 0 auto; gap: 6px; }
 .site-desktop-nav a { position: relative; padding: 10px 14px; color: var(--navy); font-size: 13px; font-weight: 700; transition: color .2s; }
 .site-desktop-nav a::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 4px; height: 2px; background: var(--gold-grad); transform: scaleX(0); transform-origin: left; transition: transform .3s var(--ease); }
@@ -104,7 +110,7 @@ h1, h2, h3, h4, .btn, button, input, select, textarea { font-family: inherit; }
 
 @media (max-width: 900px) {
   .site-header, .site-header.scrolled { height: 68px; }
-  .site-header .logo-image, .site-header.scrolled .logo-image { width: 48px; height: 48px; }
+  .site-header .logo-image.wordmark, .site-header.scrolled .logo-image.wordmark { height: 38px; }
   .site-mobile-nav { top: 100%; left: 0; right: 0; }
   .hero { min-height: 640px; }
   .hero-content { padding-bottom: 60px; }

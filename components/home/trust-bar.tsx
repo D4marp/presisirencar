@@ -11,7 +11,7 @@ export function TrustBar() {
     { icon: ShieldCheck, title: "Unit terawat & bersih", text: "Disiapkan sebelum diserahkan" },
   ];
   return (
-    <section className="border-y border-slate-200 bg-slate-50" aria-label="Alasan memilih PRESISI">
+    <section className="border-y border-slate-200 bg-slate-50" aria-label="Alasan memilih NaKay Trans">
       <ul className="mx-auto grid w-full max-w-6xl gap-px px-4 py-5 sm:grid-cols-2 md:px-6 lg:grid-cols-4">
         {items.map(({ icon: Icon, title, text }, i) => (
           <li key={title} className="flex items-center gap-3 py-2 lg:px-4 lg:first:pl-0">

@@ -75,7 +75,7 @@ function Form() {
         <div className="login-side-inner">
           <div className="eyebrow light"><span /> Undangan khusus</div>
           <h1>Bergabung sebagai pengelola armada.</h1>
-          <p>Halaman ini hanya untuk orang yang menerima kode undangan dari administrator PRESISI Rent Car.</p>
+          <p>Halaman ini hanya untuk orang yang menerima kode undangan dari administrator NaKay Trans.</p>
         </div>
       </section>
       <section className="login-form-wrap">

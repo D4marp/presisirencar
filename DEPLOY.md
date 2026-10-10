@@ -1,4 +1,4 @@
-# Deploy produksi — PRESISI Rent Car
+# Deploy produksi — NaKay Trans
 
 Dua bagian: **frontend Next.js** dan **backend Go**. Backend wajib diberi variabel environment aman; tanpa itu ia menolak start (disengaja).
 

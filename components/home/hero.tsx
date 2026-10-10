@@ -71,7 +71,7 @@ export function Hero() {
           </h1>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <a
-              href={waLink("Halo PRESISI Rent Car, saya ingin sewa mobil. Mohon info unit yang tersedia.")}
+              href={waLink("Halo NaKay Trans, saya ingin sewa mobil. Mohon info unit yang tersedia.")}
               target="_blank"
               rel="noreferrer"
               className="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-amber-500 px-7 text-base font-extrabold text-slate-900 transition-colors hover:bg-amber-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"

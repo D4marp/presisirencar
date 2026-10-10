@@ -38,7 +38,7 @@ export function Fleet({ cars, search, onChange }: { cars: Car[]; search: Search;
           {list.map((car) => {
             const price = dailyPrice(car, search.mode);
             const includesDriver = car.rentalType === "Dengan Sopir";
-            const message = `Halo PRESISI Rent Car, saya ingin sewa ${car.name} (${search.mode}) . Mohon info ketersediaan dan total biayanya.`;
+            const message = `Halo NaKay Trans, saya ingin sewa ${car.name} (${search.mode}). Mohon info ketersediaan dan total biayanya.`;
             return (
               <li key={car.slug} className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
                 <Link href={`/armada/${car.slug}`} className="relative block aspect-[4/3] bg-slate-100">
@@ -66,7 +66,7 @@ export function Fleet({ cars, search, onChange }: { cars: Car[]; search: Search;
                     
                   </div>
                   <a
-                    href={car.available ? waLink(message) : waLink(`Halo PRESISI Rent Car, apakah ${car.name} bisa dijadwalkan? Mohon info tanggal yang tersedia.`)}
+                    href={car.available ? waLink(message) : waLink(`Halo NaKay Trans, apakah ${car.name} bisa dijadwalkan? Mohon info tanggal yang tersedia.`)}
                     target="_blank"
                     rel="noreferrer"
                     className="mt-4 flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-700 text-sm font-bold text-white transition-colors hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-800"
