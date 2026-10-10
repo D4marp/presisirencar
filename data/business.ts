@@ -2,7 +2,7 @@
 // Nilai yang dibiarkan null / kosong tidak akan ditampilkan sebagai klaim.
 
 export const BRAND_NAME = "NaKay Trans";
-export const BRAND_TAGLINE = "Transportation · Rent Car · Tour & Travel";
+export const BRAND_TAGLINE = "Transportation - Rentcar - Tour & Travel";
 
 export const WA_NUMBER = "6281362218168";
 export const PHONE_DISPLAY = "0813-6221-8168";

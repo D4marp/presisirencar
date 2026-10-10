@@ -186,3 +186,8 @@ h1, h2, h3, h4, .btn, button, input, select, textarea { font-family: inherit; }
 .state-page h1 { margin: 0 0 16px; max-width: 720px; color: var(--navy); font: 800 clamp(34px, 5vw, 56px)/1.05 var(--font-jakarta), "Segoe UI", sans-serif; }
 .state-page p { max-width: 520px; margin: 0 0 28px; color: var(--muted); line-height: 1.7; }
 .state-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* Navbar: logo tulisan lebih lebar, jadi jaga agar telepon/tombol tidak patah baris */
+.site-header-actions .btn, .site-phone { white-space: nowrap; }
+.site-desktop-nav { gap: 2px; }
+@media (max-width: 1180px) { .site-phone { display: none; } }

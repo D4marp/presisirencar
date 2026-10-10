@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, MessageCircle, ShieldCheck } from "lucide-react";
-import { HERO_POSTER, HERO_VIDEO } from "@/data/business";
+import { BRAND_TAGLINE, HERO_POSTER, HERO_VIDEO } from "@/data/business";
 import { waLink, type Mode } from "@/lib/rental";
 
 // Pilihan jenis sewa dan tipe mobil di daftar armada.
@@ -64,7 +64,7 @@ export function Hero() {
       <div className="mx-auto flex w-full max-w-6xl items-center px-4 pb-20 pt-16 md:px-6 md:pb-28 md:pt-24 lg:min-h-[calc(100svh-84px)] lg:max-h-[860px]">
         <div className="w-full max-w-xl">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm">
-            <ShieldCheck className="size-4 text-emerald-300" aria-hidden /> Rental mobil Semarang · Operasional 24 jam
+            <ShieldCheck className="size-4 text-emerald-300" aria-hidden /> {BRAND_TAGLINE}
           </p>
           <h1 className="text-[2.1rem] font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[3.6rem]">
             Sewa Mobil di Semarang — Rapi, Tepat Waktu &amp; Tanpa Ribet
